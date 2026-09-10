@@ -1,5 +1,5 @@
 <template>
-    <div class="card1" v-if="financialStatements && quarter !== null">
+    <div class="card1" v-if="hasFinancialData">
         <div class="company-info">
             <div class="financial-section">
                 <div class="section1">
@@ -240,31 +240,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { useCounterStore } from '@/stores/counter';
-import Chart from 'chart.js/auto';
-import { getStatement } from '@/apis/api/company';
+import { computed, ref, onMounted } from 'vue';
+import { getCompanyQuarter, getStatement } from '@/apis/api/company';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
 const companyId = ref(route.params.companyId);
-const store = useCounterStore();
-const API_URL = store.API_URL;
 const financialStatements = ref(null);
 const quarter = ref(null);
+const hasFinancialData = computed(() =>
+    financialStatements.value?.length >= 20 && quarter.value?.length > 0,
+);
 
 onMounted(() => {
     getCompanySheet();
-    getCompanyQuarter();
+    loadCompanyQuarter();
 });
 
 const getCompanySheet = () => {
     getStatement(route.params.companyId,
         (res) => {
             financialStatements.value = res.data.data;
-            console.log('Financial Statements:', financialStatements.value);
-            renderChart();
         },
         (err) => {
             console.log(err)
@@ -272,16 +268,16 @@ const getCompanySheet = () => {
     )
 };
 
-const getCompanyQuarter = () => {
-    axios
-        .get(`${API_URL}/api/company/quarter/${companyId.value}`)
-        .then((res) => {
+const loadCompanyQuarter = () => {
+    getCompanyQuarter(
+        companyId.value,
+        res => {
             quarter.value = res.data.data;
-            console.log('Quarter:', quarter.value);
-        })
-        .catch((err) => {
-            console.error('Error fetching quarter:', err);
-        });
+        },
+        () => {
+            quarter.value = [];
+        },
+    );
 };
 
 const formatNumber = (value) => {

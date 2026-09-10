@@ -1,7 +1,7 @@
 <template>
     <div class="container1">
         <h2 class="title1">특허 목록</h2>
-        <h5 class="subtitle1" v-if="patents.length === 0">{{ patents.message }}</h5>
+        <h5 class="subtitle1" v-if="patents.length === 0">등록된 특허가 없습니다.</h5>
         <h5 class="subtitle1" v-else>특허 개수: {{ patents.length }}</h5>
         <ul class="patent-list">
             <li
@@ -12,23 +12,20 @@
                 <p class="patent-summary">{{ patent.patentSummary }}</p>
             </li>
         </ul>
-        <button class="show-more" v-if="!isExpanded" @click="showMore">더 보기</button>
+        <button class="show-more" v-if="canExpand && !isExpanded" @click="showMore">더 보기</button>
         <button class="show-more" v-if="isExpanded" @click="foldList">접기</button>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { useCounterStore } from '@/stores/counter';
+import { computed, ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { getPatent } from '@/apis/api/patent';
 
 const patents = ref([]);
 const visiblePatents = ref([]);
 const batchSize = 3; // 한 번에 보여줄 특허 수
 const isExpanded = ref(false); // 리스트가 확장되었는지 여부를 추적
-const store = useCounterStore();
-const API_URL = store.API_URL;
 const route = useRoute();
 
 const companyId = ref(route.params.companyId);
@@ -39,21 +36,20 @@ onMounted(() => {
 });
 
 const getLicenseData = function () {
-    axios({
-        method: 'get',
-        url: `${API_URL}/api/patent/${companyId.value}`,
-    })
-        .then((res) => {
+    getPatent(
+        companyId.value,
+        res => {
             patents.value = res.data.data;
             visiblePatents.value = patents.value.slice(0, batchSize);
-            console.log(patents.value);
-            // console.log('데이터 받음');
-        })
-        .catch((err) => {
-            console.log(err);
-            console.log('실패');
-        });
+        },
+        () => {
+            patents.value = [];
+            visiblePatents.value = [];
+        },
+    );
 };
+
+const canExpand = computed(() => patents.value.length > batchSize);
 
 const showMore = () => {
     if (visiblePatents.value.length < patents.value.length) {

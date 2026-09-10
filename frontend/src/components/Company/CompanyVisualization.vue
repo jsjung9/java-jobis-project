@@ -18,46 +18,44 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onBeforeUnmount, onMounted } from 'vue';
 import Chart from 'chart.js/auto';
 import 'chartjs-adapter-date-fns';
 import 'chartjs-plugin-datalabels';
-import axios from 'axios';
-import { useCounterStore } from '@/stores/counter';
 import { useRoute } from 'vue-router';
 import { getCompanyDetail } from '@/apis/api/company';
 
 
 const chartCanvas = ref(null);
 const visualizationData = ref(null);
-const accessToken = localStorage.getItem('accessToken');
-const store = useCounterStore();
 const route = useRoute();
 const companyId = ref(route.params.companyId);
-const API_URL = store.API_URL;
+let chart;
 
 const getcompanyInformation = function () {
     getCompanyDetail(
         companyId.value,
         (res) => {
             visualizationData.value = res.data.data.factor;
-            console.log(visualizationData.value);
-            // console.log('데이터 받음');
-            renderChart(); // 데이터를 받은 후에 차트를 렌더링
+            renderChart();
         },
-        (res) => {
-            console.log(err);
-        }
+        () => {}
     );
 };
 
 const renderChart = () => {
     const ctx = chartCanvas.value.getContext('2d');
-    const dataValues = Object.values(visualizationData.value);
-    const maxDataValue = Math.max(...dataValues); // 데이터의 최대값 계산
-    const normalizedData = dataValues.map((value) => Math.min(value, 9)); // 최대값을 9로 제한
+    const dataValues = [
+        visualizationData.value.stability,
+        visualizationData.value.profitability,
+        visualizationData.value.activity,
+        visualizationData.value.growth,
+        visualizationData.value.efficiency,
+    ];
+    const normalizedData = dataValues.map(value => Math.min(value, 9));
 
-    new Chart(ctx, {
+    chart?.destroy();
+    chart = new Chart(ctx, {
         type: 'radar',
         data: {
             labels: ['안정성', '수익성', '활동성', '성장성', '효율성'], // 수정된 부분: 영어에서 한글로 변경
@@ -98,6 +96,8 @@ const renderChart = () => {
 onMounted(() => {
     getcompanyInformation();
 });
+
+onBeforeUnmount(() => chart?.destroy());
 </script>
 
 <style scoped>

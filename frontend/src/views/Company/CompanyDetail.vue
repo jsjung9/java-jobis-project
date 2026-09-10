@@ -9,87 +9,20 @@
         </div>
     </div>
     <div class="bottom-section">
-        <youthCompany v-if="companyData.youthCompany" />
+        <YouthCompany />
         <BalanceSheet />
         <FinancialRatio />
-        <!-- patents가 null일 때 License 컴포넌트를 보이지 않도록 v-if를 사용하여 조건부 렌더링합니다. -->
-        <License v-if="patents && patents !== null" />
-        <!-- <News /> -->
+        <License />
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
-import { useCounterStore } from '@/stores/counter';
 import License from '@/components/Company/License.vue';
-import News from '@/components/Company/News.vue';
 import CompanyVisualization from '@/components/Company/CompanyVisualization.vue';
 import CompanyInformation from '@/components/Company/CompanyInformation.vue';
 import BalanceSheet from '@/components/Company/BalanceSheet.vue';
 import FinancialRatio from '@/components/Company/FinancialRatio.vue';
-import youthCompany from '@/components/Company/youthCompany.vue';
-import { useRoute } from 'vue-router';
-import { getCompanyDetail } from '@/apis/api/company';
-import { getPatent } from '@/apis/api/patent';
-
-const route = useRoute();
-const youthCompanyData = ref(null);
-const accessToken = localStorage.getItem('accessToken');
-const store = useCounterStore();
-const API_URL = store.API_URL;
-const companyId = ref(route.params.companyId);
-const patents = ref(null);
-
-onMounted(() => {
-    getYouthCompanyInformation();
-    getCompanyInformation();
-    getLicenseData();
-    // 페이지 스크롤을 최상단으로 이동
-    window.scrollTo(0, 0);
-});
-const companyData = ref([]);
-
-const getCompanyInformation = () => {
-    getCompanyDetail(companyId.value,
-        (res) => {
-            companyData.value = res.data.data;
-            scraped.value = res.data.data.scraped;
-            if (companyData.value.youthCompany) {
-                getYouthCompanyInformation();
-            }
-            console.log(companyData.value, 'companyData 입니다.');       
-        },
-        (err) => {
-            console.log(err);
-        }
-    );
-};
-
-const getYouthCompanyInformation = () => {
-    axios({
-        method: 'get',
-        url: `${API_URL}/api/company/youthcompany/1006`,
-    })
-        .then((res) => {
-            youthCompanyData.value = res.data;
-        })
-        .catch((err) => {
-            console.log(err);
-        });
-};
-
-const getLicenseData = function () {
-    getPatent(companyId.value,
-        (res) => {
-            patents.value = res.data.data;
-            visiblePatents.value = patents.value.slice(0, batchSize);
-        },
-        (err) => {
-            console.log(err)
-        }
-    );
-};
+import YouthCompany from '@/components/Company/youthCompany.vue';
 </script>
 
 <style scoped>

@@ -31,14 +31,14 @@
                         <p>회사주소: {{ companyData.address }}</p>
                         <div><strong>설립일자 :</strong> {{ companyData.foundAt }}</div>
                         <div><strong>대표자명 :</strong> {{ companyData.owner }}</div>
-                        <div><strong>자본금 :</strong> {{ companyData.capital.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",") }}원</div>
+                        <div><strong>자본금 :</strong> {{ formatNumber(companyData.capital) }}원</div>
                         <div><strong>종업원수 :</strong> {{ companyData.employeeCnt }}명</div>
                         <div><strong>업종 :</strong> {{ companyData.type }}</div>
                         <div><strong>주요제품명 :</strong> {{ companyData.productName }}</div>
                     </div>
                 </div>
                 <!-- <strong v-if="companyData.youthCompany">청년친화강소기업여부 :</strong> -->
-                <div v-if="companyData.youthCompany">
+                <div v-if="companyData.youthCompany && youthCompanyData?.length">
                     <div>고용률 : {{ youthCompanyData[0].employmentRate }}%</div>
                     <div style="margin-top: 0.6em;">평균월급 : {{ youthCompanyData[0].salary.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",") }}원</div>
                     <div style="margin-top: 0.6em;">청년비율 : {{ youthCompanyData[0].youthRate }}%</div>
@@ -53,7 +53,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
 import { useCounterStore } from '@/stores/counter';
 import { useRoute } from 'vue-router';
 import router from '@/router';
@@ -62,7 +61,6 @@ import { getCompanyDetail, getYouthCompany, isScraped, addScrap, deleteScrap } f
 
 const companyData = ref(null);
 const youthCompanyData = ref(null);
-const accessToken = localStorage.getItem('accessToken');
 const store = useCounterStore();
 const scraped = ref(null);
 
@@ -74,8 +72,6 @@ onMounted(() => {
     isLogin.value = store.isLogin;
     getCompanyInformation();
 });
-
-const API_URL = store.API_URL;
 
 function goLogin() {
   // 로그인 페이지로 이동
@@ -92,13 +88,9 @@ const getCompanyInformation = () => {
             if (companyData.value.youthCompany) {
                 getYouthCompanyInformation(); // 청년친화강소기업 여부가 true면 정보를 가져옴
             }
-            console.log(companyData.value, 'companyData 입니다.');
-
             if(isLogin.value){
                 getScrap();
             }
-            scraped.value = res.data.data.isScraped;
-            console.log(scraped.value, 'scraped입니다.');
         },
         (err) => {
             console.log(err);
@@ -111,7 +103,6 @@ const getYouthCompanyInformation = () => {
         companyId.value,
         (res) => {
             // 청년친화강소기업 정보를 가져와서 처리
-            console.log(res.data);
             youthCompanyData.value = res.data.data;
         },
         (err) => {
@@ -125,7 +116,6 @@ const scrap = () => {
     if (scraped.value == false) {
         addScrap(companyId.value,
             (res) => {
-                console.log('스크랩 성공 했습니다.', res);
                 getCompanyInformation();
             },
             (err) => {
@@ -139,7 +129,6 @@ const getScrap = () => {
     isScraped(
         companyId.value,
         (res) => {
-            console.log('스크랩 true/false 가져옵니다.', res);
             scraped.value = res.data.data;
         },
         (err) => {
@@ -149,12 +138,9 @@ const getScrap = () => {
 }
 
 const cancleScrap = () => {
-    console.log(scraped.value)
-
     deleteScrap(
         companyId.value,
         (res) => {
-            console.log('scrap 취소 성공', res);
             getCompanyInformation();
         },
         (err) => {
@@ -162,6 +148,8 @@ const cancleScrap = () => {
         }
     );
 };
+
+const formatNumber = value => Number(value ?? 0).toLocaleString('ko-KR');
 </script>
 
 <style scoped>

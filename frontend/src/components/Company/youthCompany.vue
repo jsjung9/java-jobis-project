@@ -1,5 +1,5 @@
 <template>
-    <div v-if="youthCompanyData !== null" class="card1">
+    <div v-if="youthCompanyData.length > 0" class="card1">
         <h2 style="margin-top: 1em; margin-left: 1em;">복지 지원 여부</h2>
         <div style="margin-left: 0.8em;">
             <img
@@ -129,35 +129,27 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { useCounterStore } from '@/stores/counter';
 import { useRoute } from 'vue-router';
-import router from '@/router';
+import { getYouthCompany } from '@/apis/api/company';
 const route = useRoute();
 
 const companyId = ref(route.params.companyId);
-const youthCompanyData = ref(null);
-const accessToken = localStorage.getItem('accessToken');
-const store = useCounterStore();
-const API_URL = store.API_URL;
+const youthCompanyData = ref([]);
 
 onMounted(() => {
     getYouthCompanyInformation();
 });
 
 const getYouthCompanyInformation = () => {
-    axios({
-        method: 'get',
-        url: `${API_URL}/api/company/youthcompany/${companyId.value}`,
-    })
-        .then((res) => {
-            // 청년친화강소기업 정보를 가져와서 처리
+    getYouthCompany(
+        companyId.value,
+        res => {
             youthCompanyData.value = res.data.data;
-            console.log(youthCompanyData.value);
-        })
-        .catch((err) => {
-            console.log(err);
-        });
+        },
+        () => {
+            youthCompanyData.value = [];
+        },
+    );
 };
 </script>
 

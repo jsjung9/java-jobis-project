@@ -1,5 +1,5 @@
 <template>
-    <div class="indicators-section card3">
+    <div class="indicators-section card3" v-if="hasFinancialData">
         <table class="indicators">
             <thead v-if="quarter !== null">
                 <tr>
@@ -139,19 +139,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { useCounterStore } from '@/stores/counter';
+import { computed, ref, onMounted } from 'vue';
 import { getCompanyRate, getCompanyQuarter } from '@/apis/api/company';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
 const companyId = ref(route.params.companyId);
-const store = useCounterStore();
 const companyRate = ref(null);
-const accessToken = localStorage.getItem('accessToken');
-const API_URL = store.API_URL;
 const quarter = ref(null);
+const hasFinancialData = computed(() => companyRate.value?.length >= 19 && quarter.value?.length > 0);
 
 
 onMounted(() => {
