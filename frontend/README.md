@@ -1,35 +1,16 @@
-# frontend
+# Jobis Web
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue 3 기반 Jobis 프런트엔드입니다. 화면 단위 동적 import로 라우트를 분리하고, 모든 서버 요청은 `src/apis/utils/axios.js`의 공통 클라이언트를 거칩니다.
 
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
+```bash
+npm ci
 npm run dev
 ```
 
-### Compile and Minify for Production
+환경 변수 `VITE_APP_API_URL`의 기본값은 `http://localhost:8081/api`입니다. 전체 구성과 인증 흐름은 루트의 [개발 가이드](../docs/development.md)와 [아키텍처 문서](../docs/architecture.md)를 참고하세요.
 
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
+```bash
 npm run lint
+npm run build
+npm audit --audit-level=high
 ```
