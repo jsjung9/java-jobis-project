@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface RecommendationRepository extends JpaRepository<Recommendation, Integer> {
 
-    @Query("SELECT r.company FROM Recommendation r WHERE r.worldcup.id = :id")
-    List<Company> findCompanyByWorldcupId(Integer id);
+    @Query("select r.company from Recommendation r where r.worldcup.id = :id order by r.id")
+    List<Company> findCompanyByWorldcupId(Long id);
 
 }

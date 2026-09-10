@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface PatentRepository extends JpaRepository<Patent, Long> {
 
-    List<Patent> findPatentsByCompanyId(Long companyId);
+    List<Patent> findPatentsByCompanyId(Integer companyId);
 
 }

@@ -17,10 +17,13 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.Positive;
+import org.springframework.validation.annotation.Validated;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/patent")
+@Validated
 public class PatentController {
 
     private static final Logger logger = LoggerFactory.getLogger(PatentController.class);
@@ -28,7 +31,7 @@ public class PatentController {
     private final PatentService patentService;
 
     @GetMapping("/{companyId}")
-    public ResponseEntity<Object> patentList(@PathVariable("companyId") Long companyId) {
+    public ResponseEntity<Object> patentList(@PathVariable("companyId") @Positive Integer companyId) {
         logger.info("REQUEST: PatentList list: {}", companyId);
 
         List<PatentResponse> patentResponseList = patentService.findPatents(companyId);

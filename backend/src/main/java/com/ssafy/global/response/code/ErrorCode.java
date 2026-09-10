@@ -86,6 +86,8 @@ public enum ErrorCode implements ResponseCode {
      */
     WORLDCUP_NOT_FOUND(HttpStatus.NOT_FOUND, "가상기업 목록이 없습니다."),
 
+    RECOMMENDATION_NOT_FOUND(HttpStatus.NOT_FOUND, "추천 기업 목록이 없습니다."),
+
     /**
      * Token
      */

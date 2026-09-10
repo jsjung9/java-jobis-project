@@ -16,10 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.Positive;
+import org.springframework.validation.annotation.Validated;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/recommendation")
+@Validated
 public class RecommendationController {
 
     private static final Logger logger = LoggerFactory.getLogger(RecommendationController.class);
@@ -27,7 +30,7 @@ public class RecommendationController {
     private final RecommendationService recommendationService;
 
     @GetMapping("/{worldcupId}")
-    public ResponseEntity<Object> recommendationList(@PathVariable("worldcupId") Integer worldcupId) {
+    public ResponseEntity<Object> recommendationList(@PathVariable("worldcupId") @Positive Long worldcupId) {
         logger.info("REQUEST: Recommendation list: {}", worldcupId);
 
         List<CompanyResponse> companyResponseList = recommendationService.findCompanyByWorldcupId(worldcupId);

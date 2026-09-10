@@ -19,7 +19,7 @@ public class PatentService {
 
     private final PatentRepository patentRepository;
 
-    public List<PatentResponse> findPatents(Long companyId) {
+    public List<PatentResponse> findPatents(Integer companyId) {
         List<Patent> patents = patentRepository.findPatentsByCompanyId(companyId);
 
         if(patents.isEmpty()) {

@@ -4,6 +4,8 @@ import com.ssafy.domain.worldcup.dto.WorldcupDtoMapper;
 import com.ssafy.domain.worldcup.dto.response.WorldcupResponse;
 import com.ssafy.domain.worldcup.entity.Worldcup;
 import com.ssafy.domain.worldcup.repository.WorldcupRepository;
+import com.ssafy.global.response.code.ErrorCode;
+import com.ssafy.global.response.exception.RestApiException;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,9 @@ public class WorldcupService {
 
     public List<WorldcupResponse> findRandomWorldcups() {
         List<Worldcup> randomWorldcups = worldcupRepository.findRandomWorldcups();
+        if (randomWorldcups.isEmpty()) {
+            throw new RestApiException(ErrorCode.WORLDCUP_NOT_FOUND);
+        }
 
         return WorldcupDtoMapper.worldcupEntityListToDtoList(randomWorldcups);
     }
