@@ -1,15 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
-import LoginView from '@/views/Users/LoginView.vue';
-import CompanyView from '@/views/Company/CompanyView.vue';
-import CompanyDetail from '@/views/Company/CompanyDetail.vue';
-import MypageView from '@/views/Users/MypageView.vue';
-import SignupView from '@/views/Users/SignupView.vue';
-import LoginSuccessView from '@/views/Users/LoginSuccessView.vue';
-import LoginFailureView from '@/views/Users/LoginFailureView.vue';
-import TokenExpireView from '@/views/Users/TokenExpireView.vue';
-import Test from '@/views/Company/Test.vue';
-import CompanySearchView from '@/views/Company/CompanySearchView.vue';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,60 +6,58 @@ const router = createRouter({
         {
             path: '/',
             name: 'home',
-            component: HomeView,
+            component: () => import('../views/HomeView.vue'),
         },
         {
             path: '/login',
             name: 'login',
-            component: LoginView,
+            component: () => import('@/views/Users/LoginView.vue'),
         },
         {
             path: '/company',
             name: 'company',
-            component: CompanyView,
+            component: () => import('@/views/Company/CompanyView.vue'),
+            meta: { requiresAuth: true },
         },
         {
             path: '/companydetail/:companyId',
             name: 'companydetail',
-            component: CompanyDetail,
+            component: () => import('@/views/Company/CompanyDetail.vue'),
             props: true,
         },
         {
             path: '/mypage',
             name: 'mypage',
-            component: MypageView,
-        },
-        {
-            path: '/signup',
-            name: 'signup',
-            component: SignupView,
+            component: () => import('@/views/Users/MypageView.vue'),
+            meta: { requiresAuth: true },
         },
         {
             path: '/login-success',
             name: 'loginsuccess',
-            component: LoginSuccessView,
+            component: () => import('@/views/Users/LoginSuccessView.vue'),
         },
         {
             path: '/login-failure',
             name: 'login-failure',
-            component: LoginFailureView,
+            component: () => import('@/views/Users/LoginFailureView.vue'),
         },
         {
             path: '/token-expire',
             name: 'tokenexpire',
-            component: TokenExpireView,
-        },
-        {
-            path: '/test',
-            name: 'test',
-            component: Test,
+            component: () => import('@/views/Users/TokenExpireView.vue'),
         },
         {
             path: '/search',
             name: 'search',
-            component: CompanySearchView,
+            component: () => import('@/views/Company/CompanySearchView.vue'),
         },
     ],
+});
+
+router.beforeEach(to => {
+    if (to.meta.requiresAuth && !localStorage.getItem('accessToken')) {
+        return { name: 'login', query: { redirect: to.fullPath } };
+    }
 });
 
 export default router;
