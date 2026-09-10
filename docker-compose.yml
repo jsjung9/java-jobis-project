@@ -1,37 +1,85 @@
 services:
-  spring-boot-app:
-    container_name: backend
-    image: jobis-backend  # Docker에서 빌드한 Spring Boot 애플리케이션 이미지 이름
+  mysql:
+    image: mysql:8.4
     restart: unless-stopped
-    ports:
-      - 8081:8081
     environment:
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      JWT_ACCESS_EXPIRED: ${JWT_ACCESS_EXPIRED}
-      JWT_REFRESH_EXPIRED: ${JWT_REFRESH_EXPIRED}
-      DATABASE_URL: ${DATABASE_URL}
-      DATABASE_USERNAME: ${DATABASE_USERNAME}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
-      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
-      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
-      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      MYSQL_DATABASE: jobis
+      MYSQL_USER: jobis
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-  vue-app:
-    container_name: frontend
-    image: jobis-front
+  redis:
+    image: redis:7.4-alpine
     restart: unless-stopped
-    ports:
-      - 3000:3000
-    environment:
-      VITE_APP_API_URL: ${VITE_APP_API_URL}
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
 
-networks:
-  default:
-    external:
-      name: jobis-network
+  news-api:
+    build: ./fastapi
+    restart: unless-stopped
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?Set OPENAI_API_KEY in .env}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    ports:
+      - "8000:8000"
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      news-api:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DB_URL: jdbc:mysql://mysql:3306/jobis?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      DB_USERNAME: jobis
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NEWS_SERVICE_BASE_URL: http://news-api:8000
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env}
+      JWT_COOKIE_SECURE: ${JWT_COOKIE_SECURE:-false}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      OAUTH2_REDIRECT_ORIGINS: ${OAUTH2_REDIRECT_ORIGINS:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-change-me}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-change-me}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-change-me}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-change-me}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID:-change-me}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-change-me}
+    ports:
+      - "8081:8081"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_APP_API_URL: ${VITE_APP_API_URL:-http://localhost:8081/api}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+
+volumes:
+  mysql-data:
+  redis-data:

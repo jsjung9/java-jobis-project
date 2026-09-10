@@ -65,6 +65,8 @@ public class SecurityConfig {
                                                 "/login/oauth2/**",
                                                 "/swagger-ui/**",
                                                 "/v3/api-docs/**",
+                                                "/actuator/health",
+                                                "/actuator/health/**",
                                                 "/user/login/**"
                                         ).permitAll()
                                         .requestMatchers(HttpMethod.POST, "/user/login", "/user/register", "/user/token").permitAll()

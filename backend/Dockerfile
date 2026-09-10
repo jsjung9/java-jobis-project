@@ -1,8 +1,18 @@
-FROM openjdk:17-jdk
-CMD ["./gradlew", "clean", "build"]
-ARG JAR_FILE=build/libs/*.jar
-# 애플리케이션의 JAR 파일을 컨테이너에 app.jar라는 이름으로 복사
-# 실제 build된 jar 파일 경로와 build.gradle을 참고하여 파일 이름을 작성해 주어야 한다
-COPY ${JAR_FILE} app.jar
+FROM eclipse-temurin:21-jdk-alpine AS build
+WORKDIR /workspace
+
+COPY gradlew build.gradle settings.gradle ./
+COPY gradle gradle
+RUN chmod +x gradlew
+COPY src src
+RUN ./gradlew clean bootJar --no-daemon
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+RUN addgroup -S jobis && adduser -S jobis -G jobis
+COPY --from=build /workspace/build/libs/*.jar app.jar
+USER jobis
 EXPOSE 8081
-ENTRYPOINT ["java","-jar","/app.jar"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+  CMD wget -q -O /dev/null http://localhost:8081/api/actuator/health || exit 1
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]

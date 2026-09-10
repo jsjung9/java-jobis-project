@@ -1,16 +1,15 @@
-FROM python:3.9
-
-# 작업 디렉토리 설정
+FROM python:3.13-slim
 WORKDIR /app
 
-# requirements.txt 파일을 컨테이너에 복사
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN addgroup --system jobis && adduser --system --ingroup jobis jobis
 COPY requirements.txt .
-
-# requirements.txt에 명시된 패키지 설치
-RUN pip install --no-cache-dir -r requirements.txt
-
-# 현재 디렉토리의 모든 파일을 컨테이너의 작업 디렉토리로 복사
+RUN pip install --no-cache-dir --requirement requirements.txt
 COPY . .
-
-# Uvicorn을 사용하여 호스트 0.0.0.0, 포트 8000에서 FastAPI 애플리케이션 실행
+USER jobis
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
