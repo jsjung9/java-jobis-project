@@ -67,5 +67,5 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: gradle
-      - run: chmod +x backend/gradlew
-      - run: backend/gradlew -p hadoop clean test jar --no-daemon
+      - run: chmod +x hadoop/gradlew
+      - run: hadoop/gradlew -p hadoop clean test jar --no-daemon
