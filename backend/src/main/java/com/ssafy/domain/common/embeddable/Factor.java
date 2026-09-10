@@ -53,7 +53,7 @@ public class Factor {
     public static Factor createFactor(TendencyRequest tendencyRequest){
         Factor factor = new Factor();
         factor.stability = tendencyRequest.getStability();
-        factor.profitability = tendencyRequest.getStability();
+        factor.profitability = tendencyRequest.getProfitability();
         factor.activity = tendencyRequest.getActivity();
         factor.growth = tendencyRequest.getGrowth();
         factor.efficiency = tendencyRequest.getEfficiency();

@@ -7,6 +7,7 @@ import com.ssafy.domain.users.service.UserService;
 import com.ssafy.global.response.code.SuccessCode;
 import com.ssafy.global.response.structure.SuccessResponse;
 import com.ssafy.global.util.AuthUtil;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/tendency")
-    public ResponseEntity<Object> usersTendencyCreate(@RequestBody TendencyRequest tendencyRequest) {
+    public ResponseEntity<Object> usersTendencyCreate(@Valid @RequestBody TendencyRequest tendencyRequest) {
         userService.applyUsersTendency(authUtil.getLoginUserId(), tendencyRequest);
         return SuccessResponse.createSuccess(SuccessCode.APPLY_TENDENCY_SUCCESS);
     }

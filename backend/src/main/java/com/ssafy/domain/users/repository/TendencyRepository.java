@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface TendencyReposiotry extends JpaRepository<Tendency, Integer> {
+public interface TendencyRepository extends JpaRepository<Tendency, Integer> {
 
     // 회원성향 조회
     List<Tendency> findAllByUsers(Users users);

@@ -12,14 +12,18 @@ import com.ssafy.domain.users.dto.response.TendencyResponse;
 import com.ssafy.domain.users.entity.Tendency;
 import com.ssafy.domain.users.entity.Users;
 import com.ssafy.domain.users.exception.UserNotFoundException;
-import com.ssafy.domain.users.repository.TendencyReposiotry;
+import com.ssafy.domain.users.exception.DuplicatedEmailException;
+import com.ssafy.domain.users.repository.TendencyRepository;
 import com.ssafy.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -29,26 +33,32 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    private final TendencyReposiotry tendencyReposiotry;
+    private final TendencyRepository tendencyRepository;
     private final CompanyScrapRepository companyScrapRepository;
 
+    @Transactional
     public void register(RegisterRequest request) {
-        log.info("--- register service 진입 ---");
-
-        String email = request.getEmail();
-        String password = passwordEncoder.encode(request.getPassword());
-        request.setPassword(password);
+        String email = normalizeEmail(request.getEmail());
 
         if(userRepository.existsByEmail(email)) {
-            throw new RuntimeException("이미 해당 이메일로 가입"); // 이메일중복
+            throw new DuplicatedEmailException();
         }
 
-        Users user = Users.createUser(request);
-        userRepository.save(user);
-        log.info("가입할 유저이메일 = {}", user.getEmail());
+        Users user = Users.createUser(email, passwordEncoder.encode(request.getPassword()));
+        try {
+            userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException exception) {
+            throw new DuplicatedEmailException();
+        }
     }
 
-    public Users socialRegister(Users user) { return userRepository.save(user);
+    @Transactional
+    public Users socialRegister(Users user) {
+        try {
+            return userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException exception) {
+            throw new DuplicatedEmailException();
+        }
     }
 
 //    private void validateDuplicateMember(UserDto user) {
@@ -60,7 +70,7 @@ public class UserService {
 
     public Users findUser(Integer id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("해당 유저가 없다"));
+                .orElseThrow(UserNotFoundException::new);
     }
 
 
@@ -72,7 +82,7 @@ public class UserService {
     public void applyUsersTendency(Integer id, TendencyRequest tendencyRequest){
         Users user = userRepository.findById(id)
                 .orElseThrow(UserNotFoundException::new);
-        tendencyReposiotry.save(Tendency.createUserTendency(user, tendencyRequest));
+        tendencyRepository.save(Tendency.createUserTendency(user, tendencyRequest));
     }
 
 
@@ -82,7 +92,7 @@ public class UserService {
      * @return
      */
     public List<TendencyResponse> findTendency(Users user) {
-        List<Tendency> tendencies = tendencyReposiotry.findAllByUsers(user);
+        List<Tendency> tendencies = tendencyRepository.findAllByUsers(user);
         return TendencyDtoMapper.tendencyToDtoList(tendencies);
     }
 
@@ -105,5 +115,9 @@ public class UserService {
         return CompanyDtoMapper.companyEntityToDtoList(companyList);
 
 
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 }

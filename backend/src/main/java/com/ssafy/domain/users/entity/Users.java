@@ -1,8 +1,6 @@
 package com.ssafy.domain.users.entity;
 
 import com.ssafy.domain.users.dto.UserDto;
-import com.ssafy.domain.users.dto.request.RegisterRequest;
-import com.ssafy.domain.users.dto.request.SocialRegisterRequest;
 import com.ssafy.global.oauth2.userinfo.OAuth2UserInfo;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -39,10 +37,10 @@ public class Users implements UserDetails {
     private String socialId;
 
 
-    public static Users createUser(RegisterRequest request) {
+    public static Users createUser(String email, String encodedPassword) {
         Users user = new Users();
-        user.email = request.getEmail();;
-        user.password = request.getPassword();
+        user.email = email;
+        user.password = encodedPassword;
         return user;
     }
 

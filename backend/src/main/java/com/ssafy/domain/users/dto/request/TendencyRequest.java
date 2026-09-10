@@ -1,5 +1,8 @@
 package com.ssafy.domain.users.dto.request;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Getter
@@ -9,14 +12,29 @@ import lombok.*;
 @Builder
 public class TendencyRequest {
 
-    private double stability;
+    @NotNull
+    @DecimalMin("-9.0")
+    @DecimalMax("9.0")
+    private Double stability;
 
-    private double profitability;
+    @NotNull
+    @DecimalMin("-9.0")
+    @DecimalMax("9.0")
+    private Double profitability;
 
-    private double activity;
+    @NotNull
+    @DecimalMin("-9.0")
+    @DecimalMax("9.0")
+    private Double activity;
 
-    private double growth;
+    @NotNull
+    @DecimalMin("-9.0")
+    @DecimalMax("9.0")
+    private Double growth;
 
-    private double efficiency;
+    @NotNull
+    @DecimalMin("-9.0")
+    @DecimalMax("9.0")
+    private Double efficiency;
 
 }
