@@ -2,7 +2,6 @@ package com.ssafy.global.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.domain.users.dto.request.LoginRequest;
-import com.ssafy.domain.users.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,7 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -22,19 +22,17 @@ import java.util.Locale;
 @Slf4j
 public class CustomUsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
     private final ObjectMapper objectMapper;
-    private final UserRepository userRepository;
-
     private static final String DEFAULT_LOGIN_REQUEST_URL = "/user/login";  // /auth/login으로 오는 요청을 처리
     private static final String HTTP_METHOD_POST = HttpMethod.POST.name();    //HTTP 메서드의 방식은 POST
 
-    private static final AntPathRequestMatcher ANT_PATH_REQUEST_MATCHER =
-            new AntPathRequestMatcher(DEFAULT_LOGIN_REQUEST_URL, HTTP_METHOD_POST);
+    private static final RequestMatcher LOGIN_REQUEST_MATCHER =
+            PathPatternRequestMatcher.withDefaults()
+                    .matcher(HttpMethod.POST, DEFAULT_LOGIN_REQUEST_URL);
 
-    public CustomUsernamePasswordAuthenticationFilter(ObjectMapper objectMapper, UserRepository userRepository) {
-        super(ANT_PATH_REQUEST_MATCHER);
+    public CustomUsernamePasswordAuthenticationFilter(ObjectMapper objectMapper) {
+        super(LOGIN_REQUEST_MATCHER);
         this.objectMapper = objectMapper;
-        this.userRepository = userRepository;
-    };
+    }
 
 
     /**
@@ -55,7 +53,7 @@ public class CustomUsernamePasswordAuthenticationFilter extends AbstractAuthenti
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
         // 사용자 정보를 기반으로 인증 시도
 
-        if(!request.getMethod().equals(HTTP_METHOD_POST)) {
+        if (!request.getMethod().equals(HTTP_METHOD_POST)) {
             throw new AuthenticationServiceException("post 요청이 아닙니다");
         }
 

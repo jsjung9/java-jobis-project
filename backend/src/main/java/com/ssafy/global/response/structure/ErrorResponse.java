@@ -51,12 +51,14 @@ public class ErrorResponse {
                 .stream()
                 .collect(Collectors.toMap(
                         FieldError::getField,
-                        fieldError -> Optional.ofNullable(fieldError.getDefaultMessage()).orElse("")
+                        fieldError -> Optional.ofNullable(fieldError.getDefaultMessage()).orElse(""),
+                        (first, ignored) -> first
                 ));
 
         return ErrorResponse.builder()
                 .code(responseCode.name())
                 .message(responseCode.getMessage())
+                .errors(errors)
                 .build();
     }
 
@@ -68,7 +70,8 @@ public class ErrorResponse {
                                 .reduce((first, second) -> second)
                                 .map(Object::toString)
                                 .orElse(""),
-                        ConstraintViolation::getMessage
+                        ConstraintViolation::getMessage,
+                        (first, ignored) -> first
                 ));
 
         return ErrorResponse.builder()

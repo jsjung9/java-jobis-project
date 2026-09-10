@@ -1,10 +1,7 @@
 package com.ssafy.global.oauth2.userinfo;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Map;
 
-@Slf4j
 public class KakaoOAuth2UserInfo extends OAuth2UserInfo {
 
     public KakaoOAuth2UserInfo(Map<String, Object> attributes) {
@@ -13,40 +10,37 @@ public class KakaoOAuth2UserInfo extends OAuth2UserInfo {
 
     @Override
     public String getId() {
-        return String.valueOf(attributes.get("id"));
+        Object id = attributes.get("id");
+        return id == null ? null : String.valueOf(id);
     }
 
     @Override
     public String getEmail() {
-        return getAttribute(attributes, "kakao_account", "email");
+        return getString(kakaoAccount(), "email");
     }
 
     @Override
     public String getNickname() {
-        return getAttribute(attributes, "kakao_account.profile", "nickname");
+        return getString(profile(), "nickname");
     }
 
     @Override
     public String getImageUrl() {
-        return getAttribute(attributes, "kakao_account.profile", "thumbnail_image_url");
+        return getString(profile(), "thumbnail_image_url");
     }
 
-    private String getAttribute(Map<String, Object> attributes, String key, String subKey) {
-        log.info("kakao user login, key : {}, subkey : {}", key, subKey);
+    private Map<?, ?> kakaoAccount() {
+        Object value = attributes.get("kakao_account");
+        return value instanceof Map<?, ?> map ? map : Map.of();
+    }
 
+    private Map<?, ?> profile() {
+        Object value = kakaoAccount().get("profile");
+        return value instanceof Map<?, ?> map ? map : Map.of();
+    }
 
-        Map<String, Object> account = (Map<String, Object>) attributes.get(key);
-
-        if(account == null) return null;
-
-        if(subKey.equals("email")) {
-            return (String) account.get("email");
-        }
-
-        Map<String, Object> profile = (Map<String, Object>) account.get(subKey);
-
-        if(profile == null) return null;
-
-        return (String) profile.get(subKey);
+    private String getString(Map<?, ?> source, String key) {
+        Object value = source.get(key);
+        return value instanceof String stringValue ? stringValue : null;
     }
 }

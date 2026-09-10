@@ -2,6 +2,10 @@ server:
   port: 8081
   servlet:
     context-path: /api
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
 
 spring:
   datasource:
@@ -12,13 +16,17 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
+      ddl-auto: ${JPA_DDL_AUTO:validate}
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     properties:
       hibernate.format_sql: ${JPA_FORMAT_SQL:false}
       dialect: org.hibernate.dialect.MySQL8InnoDBDialect
   data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
@@ -78,3 +86,13 @@ oauth2:
 
 services:
   news-base-url: ${NEWS_SERVICE_BASE_URL:http://localhost:8000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

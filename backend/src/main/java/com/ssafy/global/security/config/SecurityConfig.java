@@ -103,7 +103,8 @@ public class SecurityConfig {
 
     @Bean
     public CustomUsernamePasswordAuthenticationFilter customUsernamePasswordAuthenticationFilter() throws Exception {
-        CustomUsernamePasswordAuthenticationFilter filter = new CustomUsernamePasswordAuthenticationFilter(objectMapper, userRepository);
+        CustomUsernamePasswordAuthenticationFilter filter =
+                new CustomUsernamePasswordAuthenticationFilter(objectMapper);
         filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
         filter.setAuthenticationSuccessHandler(customAuthenticationSuccessHandler);
         filter.setAuthenticationFailureHandler(customAuthenticationFailureHandler);

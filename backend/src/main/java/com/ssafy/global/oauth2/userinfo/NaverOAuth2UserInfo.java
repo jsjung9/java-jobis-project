@@ -18,7 +18,10 @@ public class NaverOAuth2UserInfo extends OAuth2UserInfo {
     public String getImageUrl() { return getValueFromResponse("profile_image"); }
 
     private String getValueFromResponse(String key) {
-        Map<String, Object> response = (Map<String, Object>) attributes.get("response");
-        return response != null ? (String) response.get(key) : null;
+        if (!(attributes.get("response") instanceof Map<?, ?> response)) {
+            return null;
+        }
+        Object value = response.get(key);
+        return value instanceof String stringValue ? stringValue : null;
     }
 }

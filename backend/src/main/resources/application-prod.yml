@@ -1,0 +1,22 @@
+server:
+  shutdown: graceful
+  forward-headers-strategy: framework
+  compression:
+    enabled: true
+
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+jwt:
+  cookie:
+    secure: true
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
