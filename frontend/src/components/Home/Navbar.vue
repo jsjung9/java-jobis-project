@@ -42,6 +42,8 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'HomeNavbar' });
+
 import router from '@/router';
 import { RouterLink } from 'vue-router';
 import { useCounterStore } from '@/stores/counter';

@@ -18,7 +18,7 @@ async function refreshAccessToken() {
     if (!refreshPromise) {
         refreshPromise = axios
             .post(`${API_BASE_URL}/user/token`, {}, { withCredentials: true })
-            .then(response => {
+            .then((response) => {
                 storeAccessToken(response);
                 return accessToken();
             })
@@ -36,7 +36,7 @@ function localAxios() {
         headers: { 'Content-Type': 'application/json' },
     });
 
-    instance.interceptors.request.use(config => {
+    instance.interceptors.request.use((config) => {
         const token = accessToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -45,15 +45,15 @@ function localAxios() {
     });
 
     instance.interceptors.response.use(
-        response => {
+        (response) => {
             storeAccessToken(response);
             return response;
         },
-        async error => {
+        async (error) => {
             const request = error.config;
             const isUnauthorized = error.response?.status === 401;
-            const isAuthRequest = request?.url?.includes('/user/token')
-                || request?.url?.includes('/user/login');
+            const isAuthRequest =
+                request?.url?.includes('/user/token') || request?.url?.includes('/user/login');
 
             if (isUnauthorized && request && !request._retried && !isAuthRequest) {
                 request._retried = true;
@@ -68,7 +68,7 @@ function localAxios() {
                 }
             }
             return Promise.reject(error);
-        },
+        }
     );
 
     return instance;

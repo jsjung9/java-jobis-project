@@ -55,8 +55,11 @@
                 :key="industry.typeId"
                 :class="{ active: isTypeSelected(industry.typeId) }"
                 class="cssbuttons-io-button">
-                
-                {{ industry.typeId === 7 ? industry.industry.substring(0, 8) : industry.industry.substring(0, 7) }}
+                {{
+                    industry.typeId === 7
+                        ? industry.industry.substring(0, 8)
+                        : industry.industry.substring(0, 7)
+                }}
             </button>
         </div>
         <div v-if="typeIsclick" class="d-flex col-10 font" v-bind="typeIsclick">
@@ -66,12 +69,16 @@
                 :key="industry.typeId"
                 :class="{ active: isTypeSelected(industry.typeId) }"
                 class="cssbuttons-io-button">
-                {{ industry.typeId === 14 ? industry.industry.substring(0, 6) : industry.industry.substring(0, 7) }}
+                {{
+                    industry.typeId === 14
+                        ? industry.industry.substring(0, 6)
+                        : industry.industry.substring(0, 7)
+                }}
             </button>
         </div>
     </div>
     <!-- 테이블 임 -->
-    <div class="container font" style="margin-top: 2em; text-align: center;">
+    <div class="container font" style="margin-top: 2em; text-align: center">
         <div class="row">
             <div class="col-xs-12">
                 <table class="table table-bordered table-hover dt-responsive font">
@@ -155,6 +162,8 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'CompanySearch' });
+
 import { ref, onMounted, watch, computed } from 'vue';
 import { useCounterStore } from '@/stores/counter';
 import { useRouter } from 'vue-router';
@@ -242,7 +251,6 @@ const lastPage = () => {
     page.value = Math.ceil(totalData.value / size.value) - 1;
     store.currentPage = Math.ceil(totalData.value / size.value) - 1;
 };
-
 
 onMounted(() => {
     fetchData();
@@ -385,46 +393,22 @@ const isRegionSelected = (buttonId) => {
 watch(
     [selectRegionFilter, selectTypeFilter],
     ([newRegionFilters, newTypeFilters]) => {
-        // 지역 선택 필터 기능 구현
-        location.value = [];
-        for (let x = 0; x < newRegionFilters.length; x++) {
-            let addLocation = '';
-            // newRegionFilters 리스트 안에 값들이 Id 값들임 => 4, 9 등등
-            // Id 값으로 '대전' 과 같은 str을 매칭 시켜줌
-            addLocation = regions[newRegionFilters[x] - 1].region;
-            // addLocation 은 '대전' => 이러한 값임
-            // 이미 location에 담겨져 있지는 않은지 확인 해야 함
-            location.value.push(addLocation);
-        }
-
-        // 산업군 선택 필터 기능 구현
-        type.value = [];
-        for (let i = 0; i < newTypeFilters.length; i++) {
-            let addType = '';
-            // newTypeFilters 리스트 안에 값들이 Id 값들임 => 4, 9 등등
-            // Id 값으로 '제조업' 과 같은 str을 매칭 시켜줌
-            if (newTypeFilters[i] < 10) {
-                addType = industries1[newTypeFilters[i] - 1].industry;
-                // addLocation 은 '대전' => 이러한 값임
-            } else {
-                addType = industries2[newTypeFilters[i] - 10].industry;
-                // addLocation 은 '대전' => 이러한 값임
-            }
-            // 이미 location에 담겨져 있지는 않은지 확인 해야 함
-            type.value.push(addType);
-        }
+        location.value = newRegionFilters.map((id) => regions[id - 1].region);
+        type.value = newTypeFilters.map((id) =>
+            id < 10 ? industries1[id - 1].industry : industries2[id - 10].industry
+        );
 
         page.value = 0;
 
         fetchData();
     },
-    { deep: true },
+    { deep: true }
 );
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // 기업 상세 페이지 가기 로직
-const goCompanyDeatil = companyId =>
+const goCompanyDeatil = (companyId) =>
     router.push({
         name: 'companydetail',
         params: { companyId },
@@ -432,7 +416,7 @@ const goCompanyDeatil = companyId =>
 </script>
 <style scoped>
 .row {
-    background: white
+    background: white;
 }
 .pagenation-btn {
     height: 4.2rem;
@@ -450,7 +434,7 @@ const goCompanyDeatil = companyId =>
     font-size: 14px;
     padding: 0.7em 0.8em; /* 필요에 따라 여백을 조정합니다 */
     color: white;
-    background: #60B7FF;
+    background: #60b7ff;
     border: none;
     margin: 0.1em;
     letter-spacing: 0.05em;
@@ -462,11 +446,11 @@ const goCompanyDeatil = companyId =>
 }
 
 .cssbuttons-io-button:hover {
-    box-shadow: 0 0.5em 1.5em -0.5em #60B7FF;
+    box-shadow: 0 0.5em 1.5em -0.5em #60b7ff;
 }
 
 .cssbuttons-io-button:active {
-    box-shadow: 0 0.3em 1em -0.5em #60B7FF;
+    box-shadow: 0 0.3em 1em -0.5em #60b7ff;
 }
 /* 수정된 스타일 */
 .cssbuttons-io-button.active {
@@ -475,11 +459,11 @@ const goCompanyDeatil = companyId =>
 }
 
 .cssbuttons-io-button.active:hover {
-    box-shadow: 0 0.5em 1.5em -0.5em #60B7FF;
+    box-shadow: 0 0.5em 1.5em -0.5em #60b7ff;
 }
 
 .cssbuttons-io-button.active:active {
-    box-shadow: 0 0.3em 1em -0.5em #60B7FF;
+    box-shadow: 0 0.3em 1em -0.5em #60b7ff;
 }
 
 .cssbuttons-io-button1 {
@@ -490,7 +474,7 @@ const goCompanyDeatil = companyId =>
     font-size: 14px;
     padding: 0.7em 0.8em; /* 필요에 따라 여백을 조정합니다 */
     color: white;
-    background: #099CFF;
+    background: #099cff;
     border: none;
     margin: 0.1em;
     letter-spacing: 0.05em;
@@ -502,11 +486,11 @@ const goCompanyDeatil = companyId =>
 }
 
 .cssbuttons-io-button1:hover {
-    box-shadow: 0 0.5em 1.5em -0.5em #099CFF;
+    box-shadow: 0 0.5em 1.5em -0.5em #099cff;
 }
 
 .cssbuttons-io-button1:active {
-    box-shadow: 0 0.3em 1em -0.5em #099CFF;
+    box-shadow: 0 0.3em 1em -0.5em #099cff;
 }
 
 /* 수정된 스타일 */
@@ -516,11 +500,11 @@ const goCompanyDeatil = companyId =>
 }
 
 .cssbuttons-io-button1.active:hover {
-    box-shadow: 0 0.5em 1.5em -0.5em #099CFF;
+    box-shadow: 0 0.5em 1.5em -0.5em #099cff;
 }
 
 .cssbuttons-io-button1.active:active {
-    box-shadow: 0 0.3em 1em -0.5em #099CFF;
+    box-shadow: 0 0.3em 1em -0.5em #099cff;
 }
 
 .font {

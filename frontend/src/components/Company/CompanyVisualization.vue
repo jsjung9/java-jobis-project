@@ -5,11 +5,11 @@
             <div class="value">
                 <div class="row1">
                     <div>활동성 : {{ visualizationData.activity.toFixed(4) }}</div>
-                    <div>안정성 : {{ visualizationData.stability.toFixed(4) }}</div> 
+                    <div>안정성 : {{ visualizationData.stability.toFixed(4) }}</div>
                     <div>효율성 : {{ visualizationData.efficiency.toFixed(4) }}</div>
                 </div>
                 <div class="row2">
-                    <p>성장성 : {{ visualizationData.growth.toFixed(4) }}</p> 
+                    <p>성장성 : {{ visualizationData.growth.toFixed(4) }}</p>
                     <p>수익성 : {{ visualizationData.profitability.toFixed(4) }}</p>
                 </div>
             </div>
@@ -20,11 +20,8 @@
 <script setup>
 import { ref, onBeforeUnmount, onMounted } from 'vue';
 import Chart from 'chart.js/auto';
-import 'chartjs-adapter-date-fns';
-import 'chartjs-plugin-datalabels';
 import { useRoute } from 'vue-router';
 import { getCompanyDetail } from '@/apis/api/company';
-
 
 const chartCanvas = ref(null);
 const visualizationData = ref(null);
@@ -52,7 +49,7 @@ const renderChart = () => {
         visualizationData.value.growth,
         visualizationData.value.efficiency,
     ];
-    const normalizedData = dataValues.map(value => Math.min(value, 9));
+    const normalizedData = dataValues.map((value) => Math.min(value, 9));
 
     chart?.destroy();
     chart = new Chart(ctx, {
@@ -108,11 +105,11 @@ onBeforeUnmount(() => chart?.destroy());
 /* .value{
     display: flex;
 } */
-.row1{
+.row1 {
     display: flex;
     justify-content: space-around;
 }
-.row2{
+.row2 {
     display: flex;
     justify-content: space-around;
     margin-top: 0.6em;

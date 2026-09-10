@@ -46,6 +46,8 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'CompanyScrap' });
+
 import { ref, onMounted } from 'vue';
 import router from '@/router';
 import { deleteScrap } from '@/apis/api/company';
@@ -57,26 +59,26 @@ onMounted(() => {
 const companyList = ref([]);
 const getCompanyList = () => {
     getScraps(
-        res => {
+        (res) => {
             companyList.value = res.data.data;
         },
         () => {
             companyList.value = [];
-        },
+        }
     );
 };
 
-const cancelScrap = companyId => {
+const cancelScrap = (companyId) => {
     deleteScrap(
         companyId,
         () => {
             getCompanyList();
         },
-        () => window.alert('관심기업 해제에 실패했습니다.'),
+        () => window.alert('관심기업 해제에 실패했습니다.')
     );
 };
 
-const goCompanyDeatil = companyId =>
+const goCompanyDeatil = (companyId) =>
     router.push({
         name: 'companydetail',
         params: { companyId },

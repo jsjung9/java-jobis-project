@@ -1,15 +1,14 @@
+@use 'sass:color';
+
 $gray: #8e9aaf;
 $lavender: #cbc0d3;
 $pale: #eac7cc;
 $white: #f6f6f6;
 $font: #3498db;
 
-$pink: #007bff; // 기존 색상 대신 새로운 색상으로 변경
-
-@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400|Lora');
-
-$sans-serif: 'Open Sans', sans-serif;
-$serif: 'Lora', serif;
+$pink: #007bff;
+$sans-serif: Arial, sans-serif;
+$serif: Georgia, serif;
 
 body {
     background: $lavender;
@@ -170,7 +169,7 @@ form {
     border-color: $pink;
     &:hover {
         background: $lavender;
-        border-color: darken($lavender, 5%);
+        border-color: color.adjust($lavender, $lightness: -5%);
     }
     width: 70%;
 }

@@ -7,6 +7,10 @@ import router from './router';
 
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import 'animate.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import 'bootstrap';
 
 const app = createApp(App);
 
@@ -15,11 +19,5 @@ pinia.use(piniaPluginPersistedstate);
 app.use(router);
 app.use(pinia);
 
-// Vue 인스턴스 생성 전에 AOS 초기화
-app.mixin({
-    created() {
-        AOS.init();
-    },
-});
-
 app.mount('#app');
+AOS.init({ once: true });

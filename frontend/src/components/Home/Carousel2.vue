@@ -30,7 +30,9 @@
     </div>
 </template>
 
-<script setup></script>
+<script setup>
+defineOptions({ name: 'HomeCarousel' });
+</script>
 
 <style scoped>
 .border {

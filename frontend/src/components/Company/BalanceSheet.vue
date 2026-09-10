@@ -4,8 +4,8 @@
             <div class="financial-section">
                 <div class="section1">
                     <div>
-                        <h3 style="margin-top: 1em;">재무제표</h3>
-                        <table style="margin-top: 1em;" class="indicators">
+                        <h3 style="margin-top: 1em">재무제표</h3>
+                        <table style="margin-top: 1em" class="indicators">
                             <thead>
                                 <tr>
                                     <th>항목</th>
@@ -83,41 +83,41 @@
                         </table>
                     </div>
                     <div>
-                        <h3 style="margin-top: 1em; margin-left: 3em;">손익계산서</h3>
-                    <table style="margin-top: 1em; margin-left: 3em;"class="indicators">
-                        <thead>
-                            <tr>
-                                <th>항목</th>
-                                <th>{{ quarter[0].firstQuarterDate }}</th>
-                                <th>{{ quarter[0].secondQuarterDate }}</th>
-                                <th>{{ quarter[0].thirdQuarterDate }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>매출액</td>
-                                <td>{{ formatNumber(financialStatements[8].firstQuarter) }}</td>
-                                <td>
-                                    {{ formatNumber(financialStatements[8].secondQuarter) }}
-                                </td>
-                                <td>{{ formatNumber(financialStatements[8].thirdQuarter) }}</td>
-                            </tr>
-                            <tr>
-                                <td>매출총이익</td>
-                                <td>{{ formatNumber(financialStatements[9].firstQuarter) }}</td>
-                                <td>
-                                    {{ formatNumber(financialStatements[9].secondQuarter) }}
-                                </td>
-                                <td>{{ formatNumber(financialStatements[9].thirdQuarter) }}</td>
-                            </tr>
-                            <tr>
-                                <td>영업이익</td>
-                                <td>
-                                    {{ formatNumber(financialStatements[10].firstQuarter) }}
-                                </td>
-                                <td>
-                                    {{ formatNumber(financialStatements[10].secondQuarter) }}
-                                </td>
+                        <h3 style="margin-top: 1em; margin-left: 3em">손익계산서</h3>
+                        <table style="margin-top: 1em; margin-left: 3em" class="indicators">
+                            <thead>
+                                <tr>
+                                    <th>항목</th>
+                                    <th>{{ quarter[0].firstQuarterDate }}</th>
+                                    <th>{{ quarter[0].secondQuarterDate }}</th>
+                                    <th>{{ quarter[0].thirdQuarterDate }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>매출액</td>
+                                    <td>{{ formatNumber(financialStatements[8].firstQuarter) }}</td>
+                                    <td>
+                                        {{ formatNumber(financialStatements[8].secondQuarter) }}
+                                    </td>
+                                    <td>{{ formatNumber(financialStatements[8].thirdQuarter) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>매출총이익</td>
+                                    <td>{{ formatNumber(financialStatements[9].firstQuarter) }}</td>
+                                    <td>
+                                        {{ formatNumber(financialStatements[9].secondQuarter) }}
+                                    </td>
+                                    <td>{{ formatNumber(financialStatements[9].thirdQuarter) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>영업이익</td>
+                                    <td>
+                                        {{ formatNumber(financialStatements[10].firstQuarter) }}
+                                    </td>
+                                    <td>
+                                        {{ formatNumber(financialStatements[10].secondQuarter) }}
+                                    </td>
                                     <td>
                                         {{ formatNumber(financialStatements[10].thirdQuarter) }}
                                     </td>
@@ -248,8 +248,8 @@ const route = useRoute();
 const companyId = ref(route.params.companyId);
 const financialStatements = ref(null);
 const quarter = ref(null);
-const hasFinancialData = computed(() =>
-    financialStatements.value?.length >= 20 && quarter.value?.length > 0,
+const hasFinancialData = computed(
+    () => financialStatements.value?.length >= 20 && quarter.value?.length > 0
 );
 
 onMounted(() => {
@@ -258,25 +258,26 @@ onMounted(() => {
 });
 
 const getCompanySheet = () => {
-    getStatement(route.params.companyId,
+    getStatement(
+        route.params.companyId,
         (res) => {
             financialStatements.value = res.data.data;
         },
         (err) => {
-            console.log(err)
+            console.log(err);
         }
-    )
+    );
 };
 
 const loadCompanyQuarter = () => {
     getCompanyQuarter(
         companyId.value,
-        res => {
+        (res) => {
             quarter.value = res.data.data;
         },
         () => {
             quarter.value = [];
-        },
+        }
     );
 };
 
@@ -286,7 +287,7 @@ const formatNumber = (value) => {
 </script>
 <style scoped>
 @import url('@/assets/sheet.css');
-.section1{
+.section1 {
     display: flex;
 }
 </style>

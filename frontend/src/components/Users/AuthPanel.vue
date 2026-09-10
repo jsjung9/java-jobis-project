@@ -112,12 +112,13 @@ const formSignUp = () => {
             window.alert('회원가입에 성공하였습니다.');
             showSignIn();
         },
-        error => {
-            const message = error.response?.status === 409
-                ? '이미 가입된 이메일입니다.'
-                : '회원가입에 실패했습니다. 입력 내용을 확인해 주세요.';
+        (error) => {
+            const message =
+                error.response?.status === 409
+                    ? '이미 가입된 이메일입니다.'
+                    : '회원가입에 실패했습니다. 입력 내용을 확인해 주세요.';
             window.alert(message);
-        },
+        }
     );
 };
 
@@ -133,11 +134,11 @@ const formLogIn = () => {
             window.alert('로그인에 성공하였습니다.');
             router.push({ name: 'home' });
         },
-        () => window.alert('이메일 또는 비밀번호가 일치하지 않습니다.'),
+        () => window.alert('이메일 또는 비밀번호가 일치하지 않습니다.')
     );
 };
 
-const pinkboxTransform = computed(() => showSignup.value ? 'translateX(80%)' : 'translateX(0%)');
+const pinkboxTransform = computed(() => (showSignup.value ? 'translateX(80%)' : 'translateX(0%)'));
 
 const showSignIn = () => {
     showSignup.value = false;
@@ -149,7 +150,7 @@ const showSignUp = () => {
     showSignin.value = false;
 };
 
-const snsLogin = type => {
+const snsLogin = (type) => {
     const redirectUri = encodeURIComponent(window.location.origin);
     window.location.href = `${import.meta.env.VITE_APP_API_URL}/user/login/${type}?redirect_uri=${redirectUri}`;
 };

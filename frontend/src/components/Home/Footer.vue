@@ -25,7 +25,9 @@
     </div>
 </template>
 
-<script setup></script>
+<script setup>
+defineOptions({ name: 'HomeFooter' });
+</script>
 
 <style scoped>
 /* @import url('@/assets/footer.css'); */

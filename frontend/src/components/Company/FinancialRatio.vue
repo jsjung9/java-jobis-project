@@ -147,8 +147,9 @@ const route = useRoute();
 const companyId = ref(route.params.companyId);
 const companyRate = ref(null);
 const quarter = ref(null);
-const hasFinancialData = computed(() => companyRate.value?.length >= 19 && quarter.value?.length > 0);
-
+const hasFinancialData = computed(
+    () => companyRate.value?.length >= 19 && quarter.value?.length > 0
+);
 
 onMounted(() => {
     getCompanyRatio();
@@ -164,7 +165,7 @@ const getCompanyRatio = () => {
         (err) => {
             console.error(err);
         }
-    )
+    );
 };
 
 const loadCompanyQuarter = () => {
@@ -176,7 +177,7 @@ const loadCompanyQuarter = () => {
         (err) => {
             console.error(err);
         }
-    )
+    );
 };
 </script>
 

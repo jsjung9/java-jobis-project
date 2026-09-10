@@ -31,7 +31,10 @@
                 }">
                 <SwiperSlide>
                     <div class="swiper-slide">
-                        <div class="card-container" v-for="company in companyList1" :key="company.companyId">
+                        <div
+                            class="card-container"
+                            v-for="company in companyList1"
+                            :key="company.companyId">
                             <RouterLink
                                 style="text-decoration: none"
                                 :to="{
@@ -52,7 +55,10 @@
                 </SwiperSlide>
                 <SwiperSlide>
                     <div class="swiper-slide">
-                        <div class="card-container" v-for="company in companyList2" :key="company.companyId">
+                        <div
+                            class="card-container"
+                            v-for="company in companyList2"
+                            :key="company.companyId">
                             <RouterLink
                                 style="text-decoration: none"
                                 :to="{

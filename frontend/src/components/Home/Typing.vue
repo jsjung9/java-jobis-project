@@ -1,7 +1,7 @@
 <template>
     <div class="carousel">
         <div class="background-image">
-            <img :src="getImageUrl(fname)" class="background-image" />
+            <img :src="backgroundImage" class="background-image" alt="" />
         </div>
         <div class="title1">우리는</div>
         <div class="typing-animation" id="typing-animation"></div>
@@ -10,25 +10,27 @@
 </template>
 
 <script setup>
-import 'vue3-carousel/dist/carousel.css';
-import 'animate.css';
-import { ref } from 'vue';
-import { onMounted } from 'vue';
+defineOptions({ name: 'HomeTyping' });
+
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import gif1Url from '@/assets/img/gif1.webp';
+import gif2Url from '@/assets/img/gif2.webp';
 
 // 이미지 자동 전환 로직
 const fname = ref('gif1');
 
-function getImageUrl(name) {
-    return new URL(`/src/assets/img/${name}.gif`, import.meta.url).href;
-}
-
-setInterval(() => {
+const backgroundImage = computed(() => (fname.value === 'gif1' ? gif1Url : gif2Url));
+const imageInterval = window.setInterval(() => {
     if (fname.value === 'gif1') {
         fname.value = 'gif2';
     } else if (fname.value === 'gif2') {
         fname.value = 'gif1';
     }
 }, 5000);
+const timers = [];
+const schedule = (callback, delay) => {
+    timers.push(window.setTimeout(callback, delay));
+};
 
 // 타이핑할 문자열 배열
 const texts = ['Developer', 'Engineer', 'Designer', 'Researcher', 'Doctor'];
@@ -41,12 +43,12 @@ function typeWriter(text, i, typingAnimation) {
     if (i < text.length) {
         typingAnimation.innerHTML += text.charAt(i);
         i++;
-        setTimeout(function () {
+        schedule(function () {
             typeWriter(text, i, typingAnimation);
         }, 100); // 다음 글자 타이핑 전 대기 시간 (milliseconds)
     } else {
         // 텍스트가 모두 타이핑되면 다음 텍스트로 이동
-        setTimeout(function () {
+        schedule(function () {
             deleteWriter(text, text.length - 1, typingAnimation);
         }, 1000); // 텍스트가 모두 타이핑된 후 대기 시간 (milliseconds)
     }
@@ -58,13 +60,13 @@ function deleteWriter(text, i, typingAnimation) {
         const newText = text.substring(0, i);
         typingAnimation.innerHTML = newText;
         i--;
-        setTimeout(function () {
+        schedule(function () {
             deleteWriter(text, i, typingAnimation);
         }, 50); // 다음 글자 삭제 전 대기 시간 (milliseconds)
     } else {
         // 삭제가 모두 완료되면 다음 텍스트로 이동
         textIndex = (textIndex + 1) % texts.length;
-        setTimeout(function () {
+        schedule(function () {
             typeWriter(texts[textIndex], 0, typingAnimation);
         }, 500); // 텍스트 삭제 후 대기 시간 (milliseconds)
     }
@@ -76,6 +78,11 @@ onMounted(() => {
     if (typingAnimation) {
         typeWriter(texts[textIndex], 0, typingAnimation);
     }
+});
+
+onBeforeUnmount(() => {
+    window.clearInterval(imageInterval);
+    timers.forEach(window.clearTimeout);
 });
 </script>
 

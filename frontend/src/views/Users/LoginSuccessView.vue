@@ -20,13 +20,11 @@ onMounted(() => {
     localStorage.setItem('accessToken', accessToken);
     store.setIsLogin(true);
 
-    alert("로그인에 성공하였습니다!")
+    alert('로그인에 성공하였습니다!');
 
     // Redirect to the root path
     router.push({ name: 'home' });
 });
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

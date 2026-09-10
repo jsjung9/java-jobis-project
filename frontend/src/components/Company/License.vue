@@ -4,10 +4,7 @@
         <h5 class="subtitle1" v-if="patents.length === 0">등록된 특허가 없습니다.</h5>
         <h5 class="subtitle1" v-else>특허 개수: {{ patents.length }}</h5>
         <ul class="patent-list">
-            <li
-                class="patent-item"
-                v-for="(patent, index) in visiblePatents"
-                :key="patent.patentId">
+            <li class="patent-item" v-for="patent in visiblePatents" :key="patent.patentId">
                 <div class="patent-info">{{ patent.patentName }} - {{ patent.patentDate }}</div>
                 <p class="patent-summary">{{ patent.patentSummary }}</p>
             </li>
@@ -18,6 +15,8 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'CompanyLicense' });
+
 import { computed, ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { getPatent } from '@/apis/api/patent';
@@ -38,14 +37,14 @@ onMounted(() => {
 const getLicenseData = function () {
     getPatent(
         companyId.value,
-        res => {
+        (res) => {
             patents.value = res.data.data;
             visiblePatents.value = patents.value.slice(0, batchSize);
         },
         () => {
             patents.value = [];
             visiblePatents.value = [];
-        },
+        }
     );
 };
 

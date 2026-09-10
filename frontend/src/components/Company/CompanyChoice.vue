@@ -1,9 +1,9 @@
 <template>
     <!-- 기업선호 월드컵 컴포넌트 -->
-    <div class="container1" style="margin-top: 30px;">
+    <div class="container1" style="margin-top: 30px">
         <div style="font-family: 'Pretendard'; justify-content: center; align-self: center">
             <!-- 제목 -->
-            <div class="title-container"><h2 style="text-align: center;">기업선호 월드컵</h2></div>
+            <div class="title-container"><h2 style="text-align: center">기업선호 월드컵</h2></div>
             <div v-if="!winner">
                 <!-- 현재 라운드 표시 -->
                 <transition :name="isNextRound ? 'fade-next-round' : 'fade'" mode="out-in">
@@ -16,49 +16,62 @@
                     @click="startTournamentAndgetInfo"
                     v-if="!isTournamentStarted"
                     class="learn-more"
-                    style="margin: 0 auto; display: block; background-color: #007bff; color: #fff;"> <!-- 배경색과 글자색 지정 -->
+                    style="margin: 0 auto; display: block; background-color: #007bff; color: #fff">
+                    <!-- 배경색과 글자색 지정 -->
                     {{ isLoading ? '불러오는 중...' : '시작하기' }}
                 </button>
                 <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
                 <!-- 현재 경기 표시 -->
                 <transition :name="isNextRound ? 'fade-next-round' : 'fade'" mode="out-in">
-                <div
+                    <div
                         v-if="currentMatchIndex < matches.length"
                         class="current-match-display"
-                        :key="currentMatchIndex"
-                    ><!--
+                        :key="currentMatchIndex">
+                        <!--
                         <div v-for="(match, index) in matches[currentMatchIndex]" :key="index" class="card" @click="selectWinner(currentMatchIndex, index)">
                         <img :src="`src/assets/img/worldcup/${match.worldcupId}.jpg`" alt="나와라 제발" class="image" /> -->
                         <div
                             v-for="(match, index) in matches[currentMatchIndex]"
                             :key="index"
                             class="card"
-                            @click="selectWinner(currentMatchIndex, index)"
-                            >
+                            @click="selectWinner(currentMatchIndex, index)">
                             <img :src="worldcupImage(match)" :alt="match.name" class="image" />
-<div class="text">
-                        <!-- <div class="text"> -->
-                            <span style="font-size: 20px;">{{ match.name }}</span>
-                            <div>
-                            <p :style="getStyle(match, 'activity')">활동성 : {{ match.activity }}</p>
-                            <p :style="getStyle(match, 'efficiency')">효율성 : {{ match.efficiency }}</p>
-                            <p :style="getStyle(match, 'growth')">성장성 : {{ match.growth }}</p>
-                            <p :style="getStyle(match, 'profitability')">수익성 : {{ match.profitability }}</p>
-                            <p :style="getStyle(match, 'stability')">안정성 : {{ match.stability }}</p>
+                            <div class="text">
+                                <!-- <div class="text"> -->
+                                <span style="font-size: 20px">{{ match.name }}</span>
+                                <div>
+                                    <p :style="getStyle(match, 'activity')">
+                                        활동성 : {{ match.activity }}
+                                    </p>
+                                    <p :style="getStyle(match, 'efficiency')">
+                                        효율성 : {{ match.efficiency }}
+                                    </p>
+                                    <p :style="getStyle(match, 'growth')">
+                                        성장성 : {{ match.growth }}
+                                    </p>
+                                    <p :style="getStyle(match, 'profitability')">
+                                        수익성 : {{ match.profitability }}
+                                    </p>
+                                    <p :style="getStyle(match, 'stability')">
+                                        안정성 : {{ match.stability }}
+                                    </p>
+                                </div>
+                                <span>전체 분석 내용</span>
+                                <p style="width: 380px">{{ match.description }}</p>
                             </div>
-                            <span>전체 분석 내용</span>
-                            <p style="width: 380px">{{ match.description }}</p>
-                        </div>
                         </div>
                     </div>
                 </transition>
             </div>
-            <div v-else style="width: 55rem; text-align: center;"> <!-- 우승 기업을 가운데 정렬 -->
+            <div v-else style="width: 55rem; text-align: center">
+                <!-- 우승 기업을 가운데 정렬 -->
                 <!-- 수정된 부분: 추가 정보 확인 버튼 클릭 시, winner의 name 정보만을 표시 -->
-                <h3>가상기업 <span style="color: red;">{{ winner.name }}</span> (이)가 우승했습니다 !</h3>
+                <h3>
+                    가상기업 <span style="color: red">{{ winner.name }}</span> (이)가 우승했습니다 !
+                </h3>
                 <div v-if="winnerInfoLoaded" style="margin-top: 2rem">
                     <h4 style="margin-bottom: 2rem">당신의 성향에 맞는 추천 기업</h4>
-                    <div class="box" style="background-color: #007bff; color: #fff;"></div>
+                    <div class="box" style="background-color: #007bff; color: #fff"></div>
                     <div class="card-container">
                         <div v-for="(info, index) in win" :key="index" class="unique-card">
                             <!-- 기업 카드 -->
@@ -77,7 +90,12 @@
                         </div>
                     </div>
                     <!-- 다시하기 버튼 -->
-                    <button @click="resetTournament" v-if="winner" class="learn-more" style="background-color: #007bff; color: #ffffff;"> <!-- 다시하기 버튼 색상 변경 -->
+                    <button
+                        @click="resetTournament"
+                        v-if="winner"
+                        class="learn-more"
+                        style="background-color: #007bff; color: #ffffff">
+                        <!-- 다시하기 버튼 색상 변경 -->
                         다시하기
                     </button>
                 </div>
@@ -108,7 +126,7 @@ const worldcupImages = import.meta.glob('/src/assets/img/worldcup/*.jpg', {
     import: 'default',
 });
 const imagesByName = Object.fromEntries(
-    Object.entries(worldcupImages).map(([path, url]) => [path.split('/').pop(), url]),
+    Object.entries(worldcupImages).map(([path, url]) => [path.split('/').pop(), url])
 );
 
 // 게임 시작 및 기업 정보 가져오기
@@ -118,7 +136,7 @@ const startTournamentAndgetInfo = function () {
 };
 
 // 기업 상세 정보 페이지로 이동
-const goCompanyDeatil = companyId =>
+const goCompanyDeatil = (companyId) =>
     router.push({
         name: 'companydetail',
         params: { companyId },
@@ -139,7 +157,7 @@ const companiesInfo = function () {
             errorMessage.value = '기업 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
             isLoading.value = false;
         }
-    )
+    );
 };
 const winnerInfoLoaded = ref(false);
 
@@ -149,7 +167,8 @@ const getWinnerInfo = () => {
 };
 const win = ref([]);
 const winnerInfo = function () {
-    getRecommendation(winner.value.worldcupId,
+    getRecommendation(
+        winner.value.worldcupId,
         (res) => {
             win.value = res.data.data;
             winnerInfoLoaded.value = true;
@@ -170,7 +189,6 @@ const createMatches = () => {
     matches.value = newMatches;
 };
 
-
 const isTournamentStarted = ref(false);
 
 // 게임 재시작
@@ -186,18 +204,17 @@ const resetTournament = () => {
     errorMessage.value = '';
 };
 
-
 // 다음 경기 시작
 const selectWinner = (matchIndex, winnerIndex) => {
-  const selectedMatch = matches.value[matchIndex][winnerIndex];
-  winners.value.push(selectedMatch);
+    const selectedMatch = matches.value[matchIndex][winnerIndex];
+    winners.value.push(selectedMatch);
 
-  setTimeout(() => {
-    currentMatchIndex.value++;
-    if (currentMatchIndex.value >= matches.value.length) {
-      startNextRound();
-    }
-  }, 50);
+    setTimeout(() => {
+        currentMatchIndex.value++;
+        if (currentMatchIndex.value >= matches.value.length) {
+            startNextRound();
+        }
+    }, 50);
 };
 
 // 다음 라운드 시작
@@ -240,21 +257,27 @@ watch(winner, (newValue) => {
 });
 
 const getStyle = (match, factor) => {
-  const values = [match.activity, match.efficiency, match.growth, match.profitability, match.stability];
-  const sortedValues = [...values].sort((a, b) => b - a);
-  const highestValue = sortedValues[0];
-  const secondHighestValue = sortedValues[1];
+    const values = [
+        match.activity,
+        match.efficiency,
+        match.growth,
+        match.profitability,
+        match.stability,
+    ];
+    const sortedValues = [...values].sort((a, b) => b - a);
+    const highestValue = sortedValues[0];
+    const secondHighestValue = sortedValues[1];
 
-  if (match[factor] === highestValue) {
-    return { color: 'red' };
-  } else if (match[factor] === secondHighestValue) {
-    return { color: 'blue' };
-  }
+    if (match[factor] === highestValue) {
+        return { color: 'red' };
+    } else if (match[factor] === secondHighestValue) {
+        return { color: 'blue' };
+    }
 
-  return {}; // 기본 스타일
+    return {}; // 기본 스타일
 };
 
-const worldcupImage = match => {
+const worldcupImage = (match) => {
     const configuredName = match.img?.split('/').pop();
     const fallbackName = `${((Number(match.worldcupId) - 1) % 16) + 1}.jpg`;
     return imagesByName[configuredName] ?? imagesByName[fallbackName];
@@ -274,11 +297,11 @@ const worldcupImage = match => {
     transition: opacity 0.2s ease-out;
 }
 .image {
-  transition: transform 0.5s ease;
+    transition: transform 0.5s ease;
 }
 
 .card:hover .image {
-  transform: scale(0.75); /* 이미지 크기를 95%로 줄입니다 */
+    transform: scale(0.75); /* 이미지 크기를 95%로 줄입니다 */
 }
 .card-container {
     display: flex;
@@ -370,5 +393,4 @@ const worldcupImage = match => {
     bottom: -5px; /* 바의 하단을 조정하여 제목 아래에 위치하도록 설정 */
     left: 16px; /* 바를 제목 컨테이너의 좌우 패딩에 맞추어 왼쪽으로 이동 */
 }
-
 </style>
