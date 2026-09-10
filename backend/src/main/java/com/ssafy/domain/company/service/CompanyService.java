@@ -2,8 +2,6 @@ package com.ssafy.domain.company.service;
 
 import static com.ssafy.domain.company.entity.QCompany.company;
 
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ssafy.domain.company.dto.*;
 import com.ssafy.domain.company.dto.response.*;
@@ -13,21 +11,18 @@ import com.ssafy.domain.company.repository.*;
 import com.ssafy.domain.users.entity.Users;
 import com.ssafy.domain.users.exception.UserNotFoundException;
 import com.ssafy.domain.users.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
 import com.querydsl.core.types.dsl.BooleanExpression;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
-@Transactional
+@Transactional(readOnly = true)
 public class CompanyService {
     private final CompanyRepository companyRepository;
     private final CompanyYouthRepository companyYouthRepository;
@@ -50,52 +45,44 @@ public class CompanyService {
      */
 
     public Page<CompanySearchResponse> getCompanies(Pageable pageable, String keyword, List<String> location, List<String> type) {
-        log.info("비회원 !!! pageable = {} keyword = {} location = {} type = {}", pageable, keyword, location, type);
-
-        // BooleanExpression 수정
         List<CompanySearchResponse> companyList = jpaQueryFactory
                 .selectFrom(company)
                 .where(
                         containsKeyword(keyword),
                         inLocation(location),
                         inType(type))
+                .orderBy(company.name.asc(), company.id.asc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch()
                 .stream()
                 .map(CompanySearchDtoMapper::companySearchResponse)
-                .collect(Collectors.toList());
+                .toList();
 
-        // 검색 조건이 올바르게 전달되었는지 확인하기 위한 로그 출력 추가
-        log.info("name = {}, address = {}, type = {}", keyword, location, type);
-
-        // 페이지 전체 수
-        JPAQuery<Long> countQuery = jpaQueryFactory
+        Long totalCount = jpaQueryFactory
                 .select(company.count())
                 .from(company)
                 .where(
                         containsKeyword(keyword),
                         inLocation(location),
-                        inType(type));
+                        inType(type))
+                .fetchOne();
 
-        log.info("============ countQuery: {}", countQuery);
-
-        // PageableExecutionUtils 사용하지 않고 직접 Page 생성
-        List<Long> totalCountList = countQuery.fetch();
-        Long totalCount = totalCountList.isEmpty() ? 0L : totalCountList.get(0);
-        return new PageImpl<>(companyList, pageable, totalCount);
+        return new PageImpl<>(companyList, pageable, totalCount == null ? 0L : totalCount);
     }
 
     private BooleanExpression containsKeyword(String keyword) {
-        return keyword != null ? company.name.contains(keyword) : null;
+        return StringUtils.hasText(keyword) ? company.name.containsIgnoreCase(keyword.trim()) : null;
     }
 
     private BooleanExpression inLocation(List<String> locations) {
         if (locations != null && !locations.isEmpty()) {
             BooleanExpression[] expressions = locations.stream()
+                    .filter(StringUtils::hasText)
+                    .map(String::trim)
                     .map(company.address::contains)
                     .toArray(BooleanExpression[]::new);
-            return Expressions.anyOf(expressions);
+            return expressions.length == 0 ? null : com.querydsl.core.types.dsl.Expressions.anyOf(expressions);
         }
         return null;
     }
@@ -103,9 +90,11 @@ public class CompanyService {
     private BooleanExpression inType(List<String> types) {
         if (types != null && !types.isEmpty()) {
             BooleanExpression[] expressions = types.stream()
+                    .filter(StringUtils::hasText)
+                    .map(String::trim)
                     .map(company.type::contains)
                     .toArray(BooleanExpression[]::new);
-            return Expressions.anyOf(expressions);
+            return expressions.length == 0 ? null : com.querydsl.core.types.dsl.Expressions.anyOf(expressions);
         }
         return null;
     }
@@ -116,16 +105,14 @@ public class CompanyService {
      * @param id
      * @return
      */
+    @Transactional
     public CompanyResponse findCompany(Integer id) {
-        Company company = companyRepository.findById(id)
+        if (companyRepository.incrementViews(id) == 0) {
+            throw new CompanyNotFoundException();
+        }
+        return companyRepository.findById(id)
+                .map(CompanyDtoMapper::companyEntityToDto)
                 .orElseThrow(CompanyNotFoundException::new);
-
-        // 조회수 카운트
-        company.companyViewsCnt();
-        companyRepository.save(company);
-
-//        Boolean isScraped = userId != null && isCompanyScraped(userId, id);
-        return CompanyDtoMapper.companyEntityToDto(company);
     }
 
 
@@ -155,8 +142,6 @@ public class CompanyService {
         Company company = companyRepository.findById(id)
                 .orElseThrow(CompanyNotFoundException::new);
         List<CompanyStatement> companyStatements = companyStatementRepository.findAllByCompany(company);
-        log.info("== statement : {}", companyStatements.size());
-        log.info("어라??");
         return CompanyStatementDtoMapper.companyStatementEntityToDtoList(companyStatements);
     }
 
@@ -218,13 +203,16 @@ public class CompanyService {
      * @param companyId
      * @param userId
      */
+    @Transactional
     public void companyScrap(Integer companyId, Integer userId){
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(CompanyNotFoundException::new);
         Users user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        companyScrapRepository.save(CompanyScrap.createCompanyScrap(company, user));
+        if (!companyScrapRepository.existsByCompanyAndUser(company, user)) {
+            companyScrapRepository.save(CompanyScrap.createCompanyScrap(company, user));
+        }
     }
 
 

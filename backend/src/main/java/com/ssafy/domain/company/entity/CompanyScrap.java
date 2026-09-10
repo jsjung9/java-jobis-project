@@ -9,7 +9,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "company_scrap")
+@Table(
+        name = "company_scrap",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_company_scrap_company_user",
+                columnNames = {"company_id", "users_id"}
+        ),
+        indexes = @Index(name = "idx_company_scrap_user", columnList = "users_id")
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CompanyScrap extends BaseTime {

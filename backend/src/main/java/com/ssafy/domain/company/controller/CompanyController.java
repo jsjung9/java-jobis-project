@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +37,8 @@ public class CompanyController {
      * @return
      */
     @GetMapping("/search")
-    public ResponseEntity<Object> companySearch(Pageable pageable,
+    public ResponseEntity<Object> companySearch(
+                                                @PageableDefault(size = 20) Pageable pageable,
 //                                                @RequestParam(required = false) Integer id,
                                                 @RequestParam(required = false) String keyword,
                                                 @RequestParam(required = false) List<String> location,
@@ -52,7 +54,6 @@ public class CompanyController {
      */
     @GetMapping("/info/{companyId}")
     public ResponseEntity<Object> companyInfo(@PathVariable("companyId") Integer id) {
-        log.info("companyInfo로 받은 id : {}", id);
         CompanyResponse companyResponseList = companyService.findCompany(id);
         return SuccessResponse.createSuccess(SuccessCode.FIND_BASE_SUCCESS, companyResponseList);
     }
@@ -79,7 +80,6 @@ public class CompanyController {
     @GetMapping("/statement/{companyId}")
     public ResponseEntity<Object> companyStatement(@PathVariable("companyId") Integer id) {
         List<CompanyStatementResponse> companyStatementResponseList = companyService.findCompanyStatement(id);
-        log.info("69 line, CompanyController, 재무제표");
         return SuccessResponse.createSuccess(SuccessCode.FIND_STATEMENT_SUCCESS, companyStatementResponseList);
     }
 

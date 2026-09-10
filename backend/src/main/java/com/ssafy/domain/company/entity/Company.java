@@ -64,7 +64,7 @@ public class Company {
     @NotNull
     @ColumnDefault("0")
     @Column(name = "views")
-    private Long views;
+    private Long views = 0L;
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
     private List<CompanyStatement> companyStatements;
@@ -81,10 +81,6 @@ public class Company {
     @OneToOne(mappedBy = "company", cascade = CascadeType.ALL)
     private CompanyQuarterInfo companyQuarterInfo;
 
-
-    public void companyViewsCnt (){
-        this.views++;
-    }
 
     @QueryProjection
     public Company(String keyword, String location, String type){
