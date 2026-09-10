@@ -15,8 +15,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
@@ -39,12 +37,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         // redis에 refreshToken 저장
         refreshTokenService.addRefreshToken(Integer.valueOf(oAuth2User.getUserId()), jwtDto.getRefreshToken());
+        jwtUtil.setRefreshTokenCookie(response, jwtDto.getRefreshToken());
 
         String redirectOrigin = redirectUriStorage.consume(request);
-        String accessToken = URLEncoder.encode(jwtDto.getAccessToken(), StandardCharsets.UTF_8);
-        String refreshToken = URLEncoder.encode(jwtDto.getRefreshToken(), StandardCharsets.UTF_8);
         response.sendRedirect(
-            redirectOrigin + "/login-success#access_token=" + accessToken + "&refresh_token=" + refreshToken
+            redirectOrigin + "/login-success#access_token=" + jwtDto.getAccessToken()
         );
     }
 }

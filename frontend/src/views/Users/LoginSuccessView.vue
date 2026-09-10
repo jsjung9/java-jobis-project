@@ -8,18 +8,16 @@ const store = useCounterStore();
 onMounted(() => {
     const tokens = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = tokens.get('access_token');
-    const refreshToken = tokens.get('refresh_token');
 
     window.history.replaceState({}, document.title, window.location.pathname);
 
-    if (!accessToken || !refreshToken) {
+    if (!accessToken) {
         router.replace({ name: 'login-failure' });
         return;
     }
 
     // 로컬스토리지에 토큰 저장
     localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
     store.setIsLogin(true);
 
     alert("로그인에 성공하였습니다!")

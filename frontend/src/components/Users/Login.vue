@@ -2,12 +2,12 @@
     <div class="section">
         <div class="container">
             <div class="title">로그인</div>
-            <form @submit.prevent="">
+            <form @submit.prevent="submitLogin">
                 <div class="input">
                     <div class="title2">email</div>
                     <input
                         class="textfield"
-                        type="text"
+                        type="email"
                         placeholder="ID를 입력하세요"
                         v-model="email" />
                 </div>
@@ -15,12 +15,12 @@
                     <div class="title2">Password</div>
                     <input
                         class="textfield"
-                        type="text"
+                        type="password"
                         placeholder="Password를 입력하세요"
                         v-model="password" />
                 </div>
                 <div class="button">
-                    <button class="primary" @click="logIn">
+                    <button class="primary" type="submit">
                         <div class="title3">로그인</div>
                     </button>
                 </div>
@@ -136,30 +136,35 @@
 import { ref } from 'vue';
 import { useCounterStore } from '@/stores/counter';
 import { RouterLink } from 'vue-router';
+import { logIn } from '@/apis/api/user';
+import router from '@/router';
 const store = useCounterStore();
 const email = ref('');
 const password = ref('');
 
-const logIn = () => {
-    console.log("login")
+const submitLogin = () => {
     const payload = {
         email: email.value,
         password: password.value,
     };
-    store.logIn(payload);
+    logIn(
+        payload,
+        () => {
+            store.setIsLogin(true);
+            router.push({ name: 'home' });
+        },
+        () => window.alert('이메일 또는 비밀번호를 확인해 주세요.'),
+    );
 };
 
-const loginKakao = () => {
-    // 카카오 로그인
+const socialLogin = type => {
+    const redirectUri = window.location.origin;
+    window.location.href = `${import.meta.env.VITE_APP_API_URL}/user/login/${type}?redirect_uri=${encodeURIComponent(redirectUri)}`;
 };
 
-const loginNaver = () => {
-    // 카카오 로그인
-};
-
-const loginGoogle = () => {
-    // 카카오 로그인
-};
+const loginKakao = () => socialLogin('kakao');
+const loginNaver = () => socialLogin('naver');
+const loginGoogle = () => socialLogin('google');
 </script>
 
 <style scoped>

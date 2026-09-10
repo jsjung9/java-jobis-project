@@ -20,6 +20,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpMethod;
@@ -42,12 +43,12 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final RefreshTokenService refreshTokenService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
                 .formLogin(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) ->
@@ -63,7 +64,7 @@ public class SecurityConfig {
                                                 "/v3/api-docs/**",
                                                 "/user/login/**"
                                         ).permitAll()
-                                        .requestMatchers(HttpMethod.POST, "/user/login", "/user/register").permitAll()
+                                        .requestMatchers(HttpMethod.POST, "/user/login", "/user/register", "/user/token").permitAll()
                                         .requestMatchers(HttpMethod.GET, "/user/check").permitAll()
                                         .requestMatchers(HttpMethod.GET,
                                                 "/company/search",
@@ -111,7 +112,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtUtil, userRepository, refreshTokenService);
+        return new JwtAuthenticationFilter(jwtUtil, userRepository);
     }
 
 }

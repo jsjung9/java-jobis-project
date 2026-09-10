@@ -1,8 +1,7 @@
 package com.ssafy.global.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ssafy.domain.users.dto.request.RegisterRequest;
-import com.ssafy.domain.users.exception.UserNotFoundException;
+import com.ssafy.domain.users.dto.request.LoginRequest;
 import com.ssafy.domain.users.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,12 +13,11 @@ import org.springframework.security.authentication.AuthenticationServiceExceptio
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.io.IOException;
+import java.util.Locale;
 
 @Slf4j
 public class CustomUsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
@@ -68,12 +66,12 @@ public class CustomUsernamePasswordAuthenticationFilter extends AbstractAuthenti
         }
 
         // 요청으로부터 사용자 정보를 읽어와 RegisterRequest 객체로 변환
-        RegisterRequest registerRequest = objectMapper.readValue(request.getInputStream(), RegisterRequest.class);
+        LoginRequest loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
 
         // 인증 요청 객체 생성 (사용자 이메일과 패스워드)
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(
-                registerRequest.getEmail(),
-                registerRequest.getPassword()
+                loginRequest.getEmail().trim().toLowerCase(Locale.ROOT),
+                loginRequest.getPassword()
         );
         // 인증 성공 시 Authentication 객체 반환
         // authenticationManager는 usersDetailsService를 통해 userDetails 객체를 가져오고

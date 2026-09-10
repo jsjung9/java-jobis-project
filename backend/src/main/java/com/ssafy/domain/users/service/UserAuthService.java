@@ -1,7 +1,10 @@
 package com.ssafy.domain.users.service;
 
+import com.ssafy.domain.users.dto.JwtDto;
 import com.ssafy.domain.users.entity.SocialType;
 import com.ssafy.domain.users.entity.Users;
+import com.ssafy.domain.users.exception.JwtInvalidException;
+import com.ssafy.domain.users.exception.UserNotFoundException;
 import com.ssafy.domain.users.repository.UserRepository;
 import com.ssafy.global.security.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +13,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Locale;
 
 @Service
 @Slf4j
@@ -22,21 +26,30 @@ public class UserAuthService {
     private final RefreshTokenService refreshTokenService;
 
     public boolean checkEmail(String email) {
-        log.info("== 이메일 검증 : {} ==", email);
-        return !userRepository.existsByEmail(email);
+        return !userRepository.existsByEmail(email.trim().toLowerCase(Locale.ROOT));
     }
 
-    public void logout(String accessToken) {
-        String userId = jwtUtil.extractId(accessToken);
-        refreshTokenService.deleteRefreshTokenByUserId(userId);
+    public void logout(Integer userId) {
+        refreshTokenService.deleteRefreshTokenByUserId(userId.toString());
 
         SecurityContext context = SecurityContextHolder.getContext();
-        log.info("============logout context : " + context);
-        // 인증 객체 삭제
         context.setAuthentication(null);
-        // Security Context 삭제
         SecurityContextHolder.clearContext();
-        log.info("============ after context : " + SecurityContextHolder.getContext());
+    }
+
+    public JwtDto refresh(String refreshToken) {
+        jwtUtil.validateRefreshToken(refreshToken);
+        String userId = jwtUtil.extractId(refreshToken);
+        String storedRefreshToken = refreshTokenService.findRefreshToken(userId);
+        if (!refreshToken.equals(storedRefreshToken)) {
+            throw new JwtInvalidException();
+        }
+        userRepository.findById(Integer.valueOf(userId))
+                .orElseThrow(UserNotFoundException::new);
+
+        JwtDto tokens = jwtUtil.generateJwtDto(userId);
+        refreshTokenService.addRefreshToken(Integer.valueOf(userId), tokens.getRefreshToken());
+        return tokens;
     }
 
     /**
@@ -44,12 +57,7 @@ public class UserAuthService {
      * 이미 가입했던 유저와 첫 회원가입하는 유저를 판별하기위해 작성
      * 예외를 던지지 않는 이유는 없을 때 회원가입 시키기 위함
      */
-    public Users findUserBySocialTypeAndId(SocialType socialType, String socialId) {
-        return userRepository.findBySocialTypeAndEmail(socialType, socialId)
-                .orElse(null);
-    }
-
-    public Users findUserByEmailAndSocialType(SocialType socialType, String socialId) {
+    public Users findSocialUser(SocialType socialType, String socialId) {
         return userRepository.findBySocialTypeAndSocialId(socialType, socialId)
                 .orElse(null);
     }

@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Collections;
 
 @Service
 @Slf4j
@@ -63,8 +64,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         Users createdUser = getUser(extractAttributes, socialType);
 
         return new CustomOAuth2User(
-                // 권한 없으니 null 반환
-                null,
+                Collections.emptyList(),
                 attributes,
                 extractAttributes.getNameAttributeKey(),
                 createdUser.getId().toString(),
@@ -90,24 +90,19 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         OAuth2UserInfo oauth2UserInfo = attributes.getOauth2UserInfo();
         String userEmail = oauth2UserInfo.getEmail();
 
-        // 이미 가입된 이메일이 있는지 확인
-        boolean alreadyExistUser = userAuthService.checkEmail(userEmail);
-
-        // 이미 가입된 이메일이 있는 경우
-        if (!alreadyExistUser) {
-            // 이미 가입된 이메일과 소셜 타입을 이용하여 해당 사용자 정보 조회
-            Users findUser = userAuthService.findUserByEmailAndSocialType(socialType, oauth2UserInfo.getId());
-
-            if (findUser != null) {
-                return findUser;
-            } else {
-                // 해당 이메일로 가입된 사용자 정보가 없는 경우 예외 처리
-                throw new OAuth2AuthenticationException(new OAuth2Error("already_registered"), "이미 가입된 이메일입니다.");
-            }
-        } else {
-            // 가입되지 않은 사용자인 경우 새로운 사용자로 등록
-            return saveUser(attributes, socialType);
+        Users existingSocialUser = userAuthService.findSocialUser(socialType, oauth2UserInfo.getId());
+        if (existingSocialUser != null) {
+            return existingSocialUser;
         }
+
+        if (!userAuthService.checkEmail(userEmail)) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error("already_registered"),
+                    "이미 다른 로그인 방식으로 가입된 이메일입니다."
+            );
+        }
+
+        return saveUser(attributes, socialType);
     }
 
 

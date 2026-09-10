@@ -16,7 +16,13 @@ import java.util.Collections;
  * 
  */
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_users_social_identity",
+                columnNames = {"social_type", "social_id"}
+        )
+)
 @Getter
 public class Users implements UserDetails {
 
@@ -46,7 +52,7 @@ public class Users implements UserDetails {
 
     public static Users createSocialUser(SocialType socialType, OAuth2UserInfo oauth2UserInfo) {
         Users user = new Users();
-        user.email = oauth2UserInfo.getEmail();
+        user.email = oauth2UserInfo.getEmail().trim().toLowerCase(java.util.Locale.ROOT);
         user.socialType = socialType;
         user.socialId = oauth2UserInfo.getId();
         return user;

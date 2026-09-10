@@ -2,28 +2,25 @@ package com.ssafy.global.security.util;
 
 import com.ssafy.domain.users.dto.JwtDto;
 import com.ssafy.domain.users.exception.JwtInvalidException;
-import com.ssafy.domain.users.repository.RefreshTokenRedisRepository;
-import com.ssafy.domain.users.service.RefreshTokenService;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
-import java.util.Optional;
 
 @Component
-@Slf4j
 public class JwtUtil {
-
-    private final RefreshTokenService refreshTokenService;
 
     @Value("${jwt.access-expired}")
     private Long accessTokenExpired;
@@ -32,6 +29,9 @@ public class JwtUtil {
 
 
     private final SecretKey SECRET_KEY;
+    private final boolean refreshCookieSecure;
+    private final String refreshCookieSameSite;
+    private final String refreshCookiePath;
 
     private final static String BEARER_TYPE = "Bearer";
     private final static String BEARER_TYPE_PREFIX = "Bearer ";
@@ -43,13 +43,20 @@ public class JwtUtil {
     private final static String CLAIM_USER_ID_KEY = "userId";
 
     private final static String ACCESS_TOKEN_HEADER = "Authorization";
-    private final static String REFRESH_TOKEN_HEADER = "Refresh-Token";
+    private final static String REFRESH_TOKEN_COOKIE = "refresh_token";
 
 
-    public JwtUtil(@Autowired RefreshTokenService refreshTokenService, @Value("${jwt.secret}") String secret) {
-        this.refreshTokenService = refreshTokenService;
-        byte[] keyBytes = secret.getBytes();
+    public JwtUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.cookie.secure:false}") boolean refreshCookieSecure,
+            @Value("${jwt.cookie.same-site:Lax}") String refreshCookieSameSite,
+            @Value("${server.servlet.context-path:/}") String contextPath
+    ) {
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         this.SECRET_KEY = Keys.hmacShaKeyFor(keyBytes);
+        this.refreshCookieSecure = refreshCookieSecure;
+        this.refreshCookieSameSite = refreshCookieSameSite;
+        this.refreshCookiePath = contextPath == null || contextPath.isBlank() ? "/" : contextPath;
     }
 
     /**
@@ -110,16 +117,42 @@ public class JwtUtil {
 
     public void setAccessAndRefreshToken(HttpServletResponse response, JwtDto jwtDto) {
         response.setStatus(HttpServletResponse.SC_OK);
-
         response.setHeader(ACCESS_TOKEN_HEADER, jwtDto.getType()+" "+jwtDto.getAccessToken());
-        response.setHeader(REFRESH_TOKEN_HEADER, jwtDto.getRefreshToken());
+        setRefreshTokenCookie(response, jwtDto.getRefreshToken());
     }
 
-    /**
-     * 헤더에서 RefreshToken 추출
-     */
-    public Optional<String> extractRefreshToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(REFRESH_TOKEN_HEADER));
+    public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, refreshToken)
+                .httpOnly(true)
+                .secure(refreshCookieSecure)
+                .sameSite(refreshCookieSameSite)
+                .path(refreshCookiePath)
+                .maxAge(Duration.ofMillis(refreshTokenExpired))
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    public void clearRefreshTokenCookie(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
+                .httpOnly(true)
+                .secure(refreshCookieSecure)
+                .sameSite(refreshCookieSameSite)
+                .path(refreshCookiePath)
+                .maxAge(Duration.ZERO)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    public String extractRefreshToken(HttpServletRequest request) {
+        if (request.getCookies() == null) {
+            throw new JwtInvalidException();
+        }
+        for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+            if (REFRESH_TOKEN_COOKIE.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        throw new JwtInvalidException();
     }
 
     /**
@@ -141,34 +174,38 @@ public class JwtUtil {
      */
     public String extractId(String accessToken) {
         try {
-            return Jwts.parser().verifyWith(SECRET_KEY).build()
-                    .parseSignedClaims(accessToken)
-                    .getPayload()
-                    .get(CLAIM_USER_ID_KEY, String.class);
-        } catch (Exception e) {
-            log.error("액세스 토큰이 유효하지 않습니다.");
-            return null;
+            return parseClaims(accessToken).get(CLAIM_USER_ID_KEY, String.class);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new JwtInvalidException();
         }
-    }
-
-    /**
-     * userPk로 redis에서 토큰 조회
-     */
-    public String getRedisRefreshToken(String userId) {
-        return refreshTokenService.findRefreshToken(userId);
     }
 
     /**
      * 토큰 검증 메서드
      */
-    public boolean validateToken(String token) {
+    public boolean validateAccessToken(String token) {
+        return validateToken(token, ACCESS_TOKEN_SUBJECT);
+    }
+
+    public boolean validateRefreshToken(String token) {
+        return validateToken(token, REFRESH_TOKEN_SUBJECT);
+    }
+
+    private boolean validateToken(String token, String expectedSubject) {
         try {
-            Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token);
+            Claims claims = parseClaims(token);
+            if (!expectedSubject.equals(claims.getSubject())) {
+                throw new JwtInvalidException();
+            }
             return true;
-        } catch (JwtException e) {
-            log.error("유효하지 않은 토큰", e);
+        } catch (JwtException | IllegalArgumentException e) {
             throw new JwtInvalidException();
         }
+    }
 
+    private Claims parseClaims(String token) {
+        return Jwts.parser().verifyWith(SECRET_KEY).build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

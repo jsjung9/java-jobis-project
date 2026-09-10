@@ -1,34 +1,24 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import axios from 'axios';
 import router from '@/router';
+import { logOut as requestLogout } from '@/apis/api/user';
 
 export const useCounterStore = defineStore(
     'counter',
     () => {
         const isLogin = ref(false);
-        const API_URL = 'https://j10b309.p.ssafy.io';
+        const API_URL = import.meta.env.VITE_APP_API_URL?.replace(/\/api\/?$/, '');
         const token = ref(localStorage.getItem('accessToken'));
         const currentPage = ref(0);
 
         const logOut = function () {
-            axios({
-                method: 'post',
-                url: `${import.meta.env.VITE_APP_API_URL}/logout`, // 임시임
-            })
-                .then((res) => {
-                    console.log(res);
+            const clearLogin = () => {
                     token.value = null;
-                    // currentUser.value = null;
                     isLogin.value = false;
-                    localStorage.clear();
-
+                    localStorage.removeItem('accessToken');
                     router.push({ name: 'home' });
-                })
-                .catch((err) => {
-                    console.log(err);
-                });
-            router.push({ name: 'home' });
+            };
+            requestLogout(clearLogin, clearLogin);
         };
         const setIsLogin = function (status) {
             isLogin.value = status;
