@@ -15,7 +15,7 @@
                         <span
                             v-if="!passwordValid"
                             class="error-message animate__animated animate__shakeX"
-                            >영문 + 숫자를 포함한 4자이상 20자 이내여야 합니다.</span
+                            >8자 이상 72자 이내로 입력해 주세요.</span
                         >
                         <input type="password" placeholder="비밀번호 확인" v-model="password2" />
                         <span
@@ -78,18 +78,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useCounterStore } from '@/stores/counter';
-import LoginLogo from '@/components/Users/LoginLogo.vue';
-import { watch } from 'vue';
 import { signUp, logIn } from '@/apis/api/user';
 import router from '@/router';
-onMounted(() => {
-    // 최상단으로 이동
-    window.scrollTo(0, 0);
-});
 
-// 회원가입 로직
+const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const store = useCounterStore();
 const userEmail = ref('');
 const password1 = ref('');
@@ -97,110 +91,53 @@ const password2 = ref('');
 const emailValid = ref(true);
 const passwordValid = ref(true);
 const passwordSamevalid = ref(true);
-
-const formSignUp = () => {
-    const payload = {
-        email: userEmail.value,
-        password: password1.value,
-    };
-    // email 유효성 검사
-    const regexEmail = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    emailValid.value = regexEmail.test(userEmail.value);
-    // 비밀번호 유효성 검사
-    const regexPassword = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,20}$/;
-    passwordValid.value = regexPassword.test(password1.value);
-    passwordSamevalid.value = password1.value === password2.value;
-    if (
-        // emailValid.value == true &&
-        passwordValid.value == true &&
-        passwordSamevalid.value == true &&
-        emailValid.value == true
-    ) {
-        // store.signUp(payload);
-        if (passwordValid.value == true) {
-            if (passwordSamevalid.value == true) {
-                signUp(
-                    payload,
-                    ({ res }) => {
-                        // 회원가입 성공
-                        console.log(res);
-                        alert("회원가입에 성공하였습니다.");
-                        showSignIn();
-                    },
-                    (error) => {
-                        // 회원가입 실패
-                        console.log(error);
-                    }
-                );
-            }
-        }
-    }
-};
-
-// Email 유효성 검사
-// const watchEmail = watch(userEmail, (newEmail, oldEmail) => {
-//     const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-//     emailValid.value = regex.test(newEmail);
-// });
-
-// 비밀번호 유효성 검사
-// const watchPassword = watch([password1, password2], ([pass1, pass2]) => {
-//     const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,20}$/;
-//     passwordValid.value = regex.test(pass1);
-//     passwordSamevalid.value = pass1 === pass2;
-// });
-
-// 로그인 로직
 const loginEmail = ref('');
 const password = ref('');
 const loginEmailValid = ref(true);
 const loginPasswordValid = ref(true);
-const login = store.isLogin;
-
-const formLogIn = () => {
-    const payload = {
-        email: loginEmail.value,
-        password: password.value,
-    };
-    // email 유효성 검사
-    const regexEmail = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    loginEmailValid.value = regexEmail.test(loginEmail.value);
-    // 비밀번호 유효성 검사
-    const regexPassword = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,20}$/;
-    loginPasswordValid.value = regexPassword.test(password.value);
-    if (loginEmailValid.value == true) {
-        // store.signUp(payload);
-        if (loginPasswordValid.value == true) {
-            logIn(payload, (res) => {
-                // 로그인 성공
-                const accessToken = res.headers.get('authorization');
-                const refreshToken = res.headers.get('refresh-token');
-                // console.log(res.headers);
-                // console.log(refreshToken);
-
-                localStorage.setItem('accessToken', accessToken.replace('Bearer ', ''));
-                localStorage.setItem('refreshToken', refreshToken);
-                store.setIsLogin(true);
-
-                alert('로그인에 성공하였습니다!');
-
-                router.push({ name: 'home' });
-            }),
-                (error) => {
-                    console.log(error);
-                    alert("아이디 혹은 비밀번호가 일치하지 않습니다.")
-                };
-        }
-    }
-};
-
-// 로그인 회원가입 화면 전환 로직
 const showSignup = ref(false);
 const showSignin = ref(true);
 
-const pinkboxTransform = computed(() => {
-    return showSignup.value ? 'translateX(80%)' : 'translateX(0%)';
-});
+onMounted(() => window.scrollTo(0, 0));
+
+const formSignUp = () => {
+    emailValid.value = emailPattern.test(userEmail.value);
+    passwordValid.value = password1.value.length >= 8 && password1.value.length <= 72;
+    passwordSamevalid.value = password1.value === password2.value;
+    if (!emailValid.value || !passwordValid.value || !passwordSamevalid.value) return;
+
+    signUp(
+        { email: userEmail.value, password: password1.value },
+        () => {
+            window.alert('회원가입에 성공하였습니다.');
+            showSignIn();
+        },
+        error => {
+            const message = error.response?.status === 409
+                ? '이미 가입된 이메일입니다.'
+                : '회원가입에 실패했습니다. 입력 내용을 확인해 주세요.';
+            window.alert(message);
+        },
+    );
+};
+
+const formLogIn = () => {
+    loginEmailValid.value = emailPattern.test(loginEmail.value);
+    loginPasswordValid.value = password.value.length > 0;
+    if (!loginEmailValid.value || !loginPasswordValid.value) return;
+
+    logIn(
+        { email: loginEmail.value, password: password.value },
+        () => {
+            store.setIsLogin(true);
+            window.alert('로그인에 성공하였습니다.');
+            router.push({ name: 'home' });
+        },
+        () => window.alert('이메일 또는 비밀번호가 일치하지 않습니다.'),
+    );
+};
+
+const pinkboxTransform = computed(() => showSignup.value ? 'translateX(80%)' : 'translateX(0%)');
 
 const showSignIn = () => {
     showSignup.value = false;
@@ -212,11 +149,9 @@ const showSignUp = () => {
     showSignin.value = false;
 };
 
-// 소셜로그인
-const snsLogin = (type) => {
-    const redirect_uri = window.location.origin + '';
-    console.log(redirect_uri);
-    window.location.href = `${import.meta.env.VITE_APP_API_URL}/user/login/${type}?redirect_uri=${redirect_uri}`;
+const snsLogin = type => {
+    const redirectUri = encodeURIComponent(window.location.origin);
+    window.location.href = `${import.meta.env.VITE_APP_API_URL}/user/login/${type}?redirect_uri=${redirectUri}`;
 };
 </script>
 
