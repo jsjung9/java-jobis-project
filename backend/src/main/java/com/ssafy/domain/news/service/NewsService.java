@@ -10,8 +10,6 @@ import com.ssafy.global.response.exception.RestApiException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NewsService {
 
     private final NewsRedisRepository newsRedisRepository;
+    private final NewsApiClient newsApiClient;
 
     public NewsResponse findNews(String companyId, String name) {
         Optional<NewsRedis> newsRedis = newsRedisRepository.findById(companyId);
@@ -32,9 +31,9 @@ public class NewsService {
         if (newsRedis.isEmpty()) {
             log.info("{} ({}) 기사를 Redis에서 찾을 수 없습니다. 외부 API 호출 중...", name, companyId);
 
-            NewsData externalNews = fetchNewsFromExternalApi(name);
+            NewsData externalNews = newsApiClient.fetch(name);
 
-            if (externalNews.getNews() != null && externalNews.getKeywords() != null) {
+            if (hasContent(externalNews)) {
                 log.info("{} ({}) 기사를 Redis에 저장합니다...", name, companyId);
 
                 return saveNewsToRedisAndReturnResponse(companyId, externalNews);
@@ -57,18 +56,7 @@ public class NewsService {
         return NewsDtoMapper.newsRedisToDto(newsRedis);
     }
 
-    private NewsData fetchNewsFromExternalApi(String name) {
-        WebClient webClient = WebClient.builder().baseUrl("http://j10b309.p.ssafy.io:8000").build();
-
-        return webClient.get()
-                .uri("/news/{name}", name)
-                .retrieve()
-                .bodyToMono(NewsData.class)
-                .block();
-    }
-
     private NewsRedis convertToNewsRedis(String companyId, NewsData newsData) {
-        try {
         List<NewsRedis.Article> articles = newsData.getNews().stream()
                 .map(article -> new NewsRedis.Article(article.getTitle(), article.getContent(), article.getDate(), article.getLink()))
                 .toList();
@@ -82,9 +70,12 @@ public class NewsService {
                 .news(articles)
                 .keywords(keywords)
                 .build();
-        } catch (Exception e) {
-            throw new RestApiException(ErrorCode.INTERNAL_SERVER_ERROR);
-        }
+    }
+
+    private boolean hasContent(NewsData newsData) {
+        return newsData.getNews() != null
+                && !newsData.getNews().isEmpty()
+                && newsData.getKeywords() != null;
     }
 
 }

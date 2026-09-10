@@ -24,6 +24,8 @@ public enum ErrorCode implements ResponseCode {
 
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에서 오류가 발생했습니다."),
 
+    EXTERNAL_SERVICE_UNAVAILABLE(HttpStatus.BAD_GATEWAY, "외부 서비스 응답을 가져오지 못했습니다."),
+
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
 
     /**

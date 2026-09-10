@@ -12,12 +12,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import org.springframework.validation.annotation.Validated;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/news")
+@Validated
 public class NewsController {
 
     private static final Logger logger = LoggerFactory.getLogger(NewsController.class);
@@ -25,7 +29,10 @@ public class NewsController {
     private final NewsService newsService;
 
     @GetMapping("/{companyId}/{name}")
-    public ResponseEntity<Object> getNews(@PathVariable("companyId") Long companyId, @PathVariable("name") String name) {
+    public ResponseEntity<Object> getNews(
+            @PathVariable("companyId") @Positive Long companyId,
+            @PathVariable("name") @NotBlank String name
+    ) {
         logger.info("REQUEST: news list: {}", name);
 
         NewsResponse newsResponseList = newsService.findNews(companyId.toString(), name);

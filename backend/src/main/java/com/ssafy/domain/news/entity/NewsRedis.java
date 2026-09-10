@@ -9,7 +9,7 @@ import java.util.List;
 
 import lombok.Data;
 
-@RedisHash(value = "NewsRedis")
+@RedisHash(value = "NewsRedis", timeToLive = 3600)
 @Data
 @Builder
 public class NewsRedis {
