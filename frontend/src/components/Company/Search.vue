@@ -156,7 +156,6 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
-import axios from 'axios';
 import { useCounterStore } from '@/stores/counter';
 import { useRouter } from 'vue-router';
 import { getCompanies } from '@/apis/api/company';
@@ -171,7 +170,6 @@ const size = ref(10); // 페이지당 아이템 수
 const keyword = ref('');
 const type = ref([]);
 const location = ref([]);
-const API_URL = store.API_URL;
 const totalData = ref(0);
 const pageButtons = ref([]);
 const maxButtons = 10; // 최대 버튼 수
@@ -187,18 +185,15 @@ const fetchData = async () => {
     getCompanies(
         payload,
         (response) => {
-            console.log("response : "+response.data);
             data.value = response.data.data.content;
-            console.log(data.value);
-            console.log(response.data.data, 'Total 갯수 확인용');
             totalData.value = response.data.data.totalElements;
-            console.log(totalData.value);
             generatePageButtons();
             // 페이지 스크롤을 최상단으로 이동
             window.scrollTo(0, 130);
         },
-        (error) => {
-            console.error('Error fetching data:', error);
+        () => {
+            data.value = [];
+            totalData.value = 0;
         }
     );
 };
@@ -236,7 +231,6 @@ const generatePageButtons = () => {
     }
 
     pageButtons.value = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
-    console.log(pageButtons.value, 'pagebuttons');
 };
 
 const firstPage = () => {
@@ -267,14 +261,6 @@ watch(
         generatePageButtons();
     }
 );
-
-router.beforeEach((to, from, next) => {
-    if (to != from) {
-        store.currentPage = 0;
-        page.value = 0;
-    }
-    next();
-});
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -354,7 +340,6 @@ const toggleButton = (buttonId) => {
         // selectedTypeFilter 리스트에서 해당 값을 제거하여 필터 해제 기능
         if (selectTypeFilter.value[i] === buttonId) {
             selectTypeFilter.value.splice(i, 1);
-            console.log(selectTypeFilter.value, 'selectTypeFilter 값');
             isCheckedType.value = true;
             break;
         }
@@ -398,9 +383,8 @@ const isRegionSelected = (buttonId) => {
 
 // Filter가 선택 될 때 마다 필터된 요청 보내기
 watch(
-    [selectRegionFilter.value, selectTypeFilter.value],
-    ([newRegionFilters, newTypeFilters], [oldRegionFilters, oldTypeFilters]) => {
-        console.log('반복문 돌기전 newRegionFilters : ', newRegionFilters);
+    [selectRegionFilter, selectTypeFilter],
+    ([newRegionFilters, newTypeFilters]) => {
         // 지역 선택 필터 기능 구현
         location.value = [];
         for (let x = 0; x < newRegionFilters.length; x++) {
@@ -409,12 +393,10 @@ watch(
             // Id 값으로 '대전' 과 같은 str을 매칭 시켜줌
             addLocation = regions[newRegionFilters[x] - 1].region;
             // addLocation 은 '대전' => 이러한 값임
-            console.log('addLocation : ', addLocation);
             // 이미 location에 담겨져 있지는 않은지 확인 해야 함
             location.value.push(addLocation);
         }
 
-        console.log('반복문 돌기전 newTypeFilters : ', newTypeFilters);
         // 산업군 선택 필터 기능 구현
         type.value = [];
         for (let i = 0; i < newTypeFilters.length; i++) {
@@ -424,33 +406,29 @@ watch(
             if (newTypeFilters[i] < 10) {
                 addType = industries1[newTypeFilters[i] - 1].industry;
                 // addLocation 은 '대전' => 이러한 값임
-                console.log('addLocation : ', addType);
             } else {
                 addType = industries2[newTypeFilters[i] - 10].industry;
                 // addLocation 은 '대전' => 이러한 값임
-                console.log('addLocation : ', addType);
             }
             // 이미 location에 담겨져 있지는 않은지 확인 해야 함
             type.value.push(addType);
         }
 
-        console.log('for 문 다 돌고 location', location.value);
-        console.log('for 문 다 돌고 type', type.value);
         page.value = 0;
 
         fetchData();
-    }
+    },
+    { deep: true },
 );
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // 기업 상세 페이지 가기 로직
-const goCompanyDeatil = (comapnyId) => [
+const goCompanyDeatil = companyId =>
     router.push({
         name: 'companydetail',
-        params: { companyId: comapnyId },
-    }),
-];
+        params: { companyId },
+    });
 </script>
 <style scoped>
 .row {

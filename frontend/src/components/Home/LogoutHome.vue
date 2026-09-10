@@ -1,7 +1,7 @@
 <template>
     <div>
         <Typing />
-        <Top10ComapnyList />
+        <Top10CompanyList />
         <GoWorldcup
             data-aos="fade-up"
             data-aos-offset="10"
@@ -25,7 +25,7 @@
 
 <script setup>
 import Carousel2 from '@/components/Home/Carousel2.vue';
-import Top10ComapnyList from '@/components/Home/Top10ComapnyList.vue';
+import Top10CompanyList from '@/components/Home/Top10CompanyList.vue';
 import Typing from '@/components/Home/Typing.vue';
 import GoWorldcup from '@/components/Home/GoWorldcup.vue';
 </script>

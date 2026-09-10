@@ -44,13 +44,9 @@
 <script setup>
 import router from '@/router';
 import { RouterLink } from 'vue-router';
-import { ref, watch, computed } from 'vue';
 import { useCounterStore } from '@/stores/counter';
-import { logOut } from '@/apis/api/user';
 
 const store = useCounterStore();
-// 로그인 유무 확인
-console.log(store.isLogin);
 
 const goLogin = () => {
     router.push({
@@ -59,23 +55,7 @@ const goLogin = () => {
 };
 
 const formLogout = () => {
-    // 로그아웃 로직
-    console.log("logout")
-    logOut(
-        (res) => {
-        console.log(res);
-        store.setIsLogin(false);
-        localStorage.clear();
-
-        alert("로그아웃 되었습니다.")
-
-        router.push({ name: 'home' });
-        
-    },
-    (err) => {
-        console.log(err);
-    })
-    // store.logOut();
+    store.logOut();
 };
 </script>
 

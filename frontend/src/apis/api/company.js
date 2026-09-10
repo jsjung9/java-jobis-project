@@ -6,7 +6,15 @@ const url = "/company";
 
 // 기업조회
 function getCompanies(payload, success, fail) {
-    local.get(`${url}/search?page=${payload.page}&size=${payload.size}&keyword=${payload.keyword}&location=${payload.location}&type=${payload.type}`)
+    local.get(`${url}/search`, {
+        params: {
+            page: payload.page,
+            size: payload.size,
+            keyword: payload.keyword || undefined,
+            location: payload.location.join(',') || undefined,
+            type: payload.type.join(',') || undefined,
+        },
+    })
     .then(success)
     .catch(fail)
 }

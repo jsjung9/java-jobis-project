@@ -31,7 +31,7 @@
                 }">
                 <SwiperSlide>
                     <div class="swiper-slide">
-                        <div class="card-container" v-for="company in companyList1">
+                        <div class="card-container" v-for="company in companyList1" :key="company.companyId">
                             <RouterLink
                                 style="text-decoration: none"
                                 :to="{
@@ -52,7 +52,7 @@
                 </SwiperSlide>
                 <SwiperSlide>
                     <div class="swiper-slide">
-                        <div class="card-container" v-for="company in companyList2">
+                        <div class="card-container" v-for="company in companyList2" :key="company.companyId">
                             <RouterLink
                                 style="text-decoration: none"
                                 :to="{
@@ -80,16 +80,12 @@
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { EffectCards, Autoplay } from 'swiper/modules';
 import 'swiper/css';
-import axios from 'axios';
-import { useCounterStore } from '@/stores/counter';
 import { onMounted, ref } from 'vue';
 import { getPopularCompany } from '@/apis/api/company';
 
-const store = useCounterStore();
 const companyList = ref(null);
 const companyList1 = ref([]);
 const companyList2 = ref([]);
-const companyId = ref(null);
 
 onMounted(() => {
     getTopViewList();
@@ -98,16 +94,12 @@ const getTopViewList = () => {
     getPopularCompany(
         (res) => {
             companyList.value = res.data.data;
-            companyId.value = res.data.data.companyId;
-
             // companyList를 반으로 나누어 companyList1과 companyList2에 할당
             const halfIndex = Math.ceil(companyList.value.length / 2);
             companyList1.value = companyList.value.slice(0, halfIndex);
             companyList2.value = companyList.value.slice(halfIndex);
         },
-        (err) => {
-            console.log(err);
-        }
+        () => {}
     );
 };
 </script>

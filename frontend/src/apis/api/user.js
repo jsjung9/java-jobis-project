@@ -24,8 +24,15 @@ function logOut(success, fail) {
     .catch(fail); 
 }
 
+function getScraps(success, fail) {
+  local.get(`${url}/scrap`)
+    .then(success)
+    .catch(fail);
+}
+
 export {
   signUp,
   logIn,
-  logOut
+  logOut,
+  getScraps,
 }
