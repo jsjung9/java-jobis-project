@@ -59,9 +59,6 @@ public class JwtUtil {
      *
      */
     public JwtDto generateJwtDto(Authentication authentication) {
-        log.info("== jwtDto 생성, 시간 : {} ==", new Date(System.currentTimeMillis() + accessTokenExpired));
-        log.info("authentication info {}", authentication.toString());
-
         String accessToken = Jwts.builder()
                 .subject(ACCESS_TOKEN_SUBJECT)
                 // authentication에서의 name은 사용자를 고유하게 식별할 수 있는 값을 의미
@@ -88,8 +85,6 @@ public class JwtUtil {
     }
 
     public JwtDto generateJwtDto(String userId) {
-        log.info("== jwtDto 생성 ==");
-
         String accessToken = Jwts.builder()
                 .subject(ACCESS_TOKEN_SUBJECT)
                 .claim(CLAIM_USER_ID_KEY, userId)
@@ -124,7 +119,6 @@ public class JwtUtil {
      * 헤더에서 RefreshToken 추출
      */
     public Optional<String> extractRefreshToken(HttpServletRequest request) {
-        log.info("=== extract RefreshToken ===");
         return Optional.ofNullable(request.getHeader(REFRESH_TOKEN_HEADER));
     }
 
@@ -135,13 +129,9 @@ public class JwtUtil {
      */
     public String extractAccessToken(HttpServletRequest request) {
         String token = request.getHeader(ACCESS_TOKEN_HEADER);
-        log.info("=== extract AccessToken : {} ===", token);
-
         if(token == null) throw new JwtInvalidException();
-        log.info("=== accessToken 존재 ===");
         
         if(!token.startsWith(BEARER_TYPE_PREFIX)) throw new JwtInvalidException();
-        log.info("=== BEARER_TYPE_PREFIX  존재 ===");
 
         return token.substring(JWT_PREFIX_LENGTH);
     }
@@ -172,10 +162,8 @@ public class JwtUtil {
      * 토큰 검증 메서드
      */
     public boolean validateToken(String token) {
-        log.info("=== 토큰 유효성 검사 ===");
         try {
             Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token);
-            log.info("유효한 토큰 : {}", token);
             return true;
         } catch (JwtException e) {
             log.error("유효하지 않은 토큰", e);

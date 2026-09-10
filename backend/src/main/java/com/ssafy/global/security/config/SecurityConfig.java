@@ -20,10 +20,10 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -49,10 +49,36 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, exception) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                        .accessDeniedHandler((request, response, exception) ->
+                                response.sendError(HttpServletResponse.SC_FORBIDDEN)))
                 .authorizeHttpRequests((authorize) ->
                                 authorize
-                                        .requestMatchers("/**","/css/**","/images/**","/js/**","/favicon.ico").permitAll()
-                                        .anyRequest().authenticated() // 위의 경로 이외에는 모두 인증된 사용자만 접근 가능
+                                        .requestMatchers(
+                                                "/oauth2/**",
+                                                "/login/oauth2/**",
+                                                "/swagger-ui/**",
+                                                "/v3/api-docs/**",
+                                                "/user/login/**"
+                                        ).permitAll()
+                                        .requestMatchers(HttpMethod.POST, "/user/login", "/user/register").permitAll()
+                                        .requestMatchers(HttpMethod.GET, "/user/check").permitAll()
+                                        .requestMatchers(HttpMethod.GET,
+                                                "/company/search",
+                                                "/company/info/**",
+                                                "/company/statement/**",
+                                                "/company/rate/**",
+                                                "/company/youthcompany/**",
+                                                "/company/quarter/**",
+                                                "/company/popular",
+                                                "/news/**",
+                                                "/patent/**",
+                                                "/recommendation/**",
+                                                "/worldcup/**"
+                                        ).permitAll()
+                                        .anyRequest().authenticated()
                 )
                 .oauth2Login((httpSecurityOAuth2LoginConfigurer ->
                         httpSecurityOAuth2LoginConfigurer
@@ -68,12 +94,6 @@ public class SecurityConfig {
         return http.build();
     }
     
-    // 빈 주입 순환참조 오류때문에 수정
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
-
     //AuthenticationManager Bean 등록
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @RedisHash(value = "refreshToken")
@@ -17,7 +18,7 @@ public class RefreshToken {
 
     private String refreshToken;
 
-    @TimeToLive
+    @TimeToLive(unit = TimeUnit.MILLISECONDS)
     private Long refreshTokenExpired;
 
     @Builder

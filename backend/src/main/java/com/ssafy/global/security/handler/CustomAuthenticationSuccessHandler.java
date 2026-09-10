@@ -35,7 +35,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        log.info("=== success handler {} ===", authentication);
+        log.info("Password login succeeded: userId={}", authentication.getName());
         // 인증 성공 시 동작 정의
 
         // 토큰 생성
@@ -53,8 +53,6 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         String accessToken = jwtDto.getAccessToken();
         if (accessToken != null && jwtUtil.validateToken(accessToken)) {
             String userId = jwtUtil.extractId(accessToken);
-            log.info("userId in success handler {}", userId);
-
             // UserDetails를 직접 구현한 Users 엔티티를 사용하여 Authentication 객체를 생성
             UserDetails userDetails = userRepository.findById(Integer.parseInt(userId))
                     .orElseThrow(UserNotFoundException::new);

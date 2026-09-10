@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    username: jobis
+    password: change-me
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: change-me
+            client-secret: change-me
+          naver:
+            client-id: change-me
+            client-secret: change-me
+          kakao:
+            client-id: change-me
+            client-secret: change-me
+
+jwt:
+  # Generate at least 32 random bytes and do not commit the real value.
+  secret: change-me-change-me-change-me-change-me

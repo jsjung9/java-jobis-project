@@ -1,19 +1,24 @@
 <script setup>
-import { useRoute } from 'vue-router';
 import { onMounted } from 'vue';
 import router from '@/router';
 import { useCounterStore } from '@/stores/counter';
 
 const store = useCounterStore();
 
-const route = useRoute();
-
 onMounted(() => {
-    const accessToken = route.params.atk;
-    const refreshToken = route.params.rtk;
+    const tokens = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = tokens.get('access_token');
+    const refreshToken = tokens.get('refresh_token');
+
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    if (!accessToken || !refreshToken) {
+        router.replace({ name: 'login-failure' });
+        return;
+    }
 
     // 로컬스토리지에 토큰 저장
-    localStorage.setItem('accessToken', accessToken.replace('Bearer ', ''));
+    localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
     store.setIsLogin(true);
 

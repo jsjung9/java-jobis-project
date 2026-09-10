@@ -10,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * UserDetails 인터페이스를 구현하여
@@ -62,7 +63,7 @@ public class Users implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return Collections.emptyList();
     }
 
     // 여기서의 userName은 유저 이름이 아닌 UserDetails 객체의 식별자를 나타냄 - user pk로 사용

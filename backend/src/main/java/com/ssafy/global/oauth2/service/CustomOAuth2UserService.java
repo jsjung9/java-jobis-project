@@ -55,7 +55,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String userNameAttributeName = userRequest.getClientRegistration()
                 .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName(); // OAuth2 로그인 시 키(PK)가 되는 값
         Map<String, Object> attributes = oAuth2User.getAttributes(); // 소셜 로그인에서 API가 제공하는 userInfo의 Json 값(유저 정보들)
-        log.info("{} :: 소셜 제공 API >> {}", socialType, attributes);
+        log.info("OAuth2 user received: provider={}", socialType);
 
         // socialType에 따라 유저 정보를 통해 OAuthAttributes 객체 생성
         OAuthAttributes extractAttributes = OAuthAttributes.of(socialType, userNameAttributeName, attributes);
@@ -117,7 +117,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
      */
     private Users saveUser(OAuthAttributes attributes, SocialType socialType) {
         Users createdUser = Users.createSocialUser(socialType, attributes.getOauth2UserInfo());
-        log.info("생성된 유저 저장>> "+ createdUser);
         return userService.socialRegister(createdUser);
     }
 }

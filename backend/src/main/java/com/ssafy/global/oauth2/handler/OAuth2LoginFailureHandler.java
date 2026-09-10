@@ -22,7 +22,7 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         log.info("소셜로그인 실패!");
-        String rdu = redirectUriStorage.getRedirectUri();
+        String rdu = redirectUriStorage.consume(request);
         response.sendRedirect(rdu + "/login-failure");
     }
 }

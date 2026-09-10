@@ -7,18 +7,14 @@ import com.ssafy.global.oauth2.util.RedirectUriStorage;
 import com.ssafy.global.response.code.SuccessCode;
 import com.ssafy.global.response.structure.SuccessResponse;
 import com.ssafy.global.security.util.JwtUtil;
-import com.ssafy.global.util.AuthUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -34,7 +30,6 @@ public class UserAuthController {
     private final UserAuthService userAuthService;
     private final RedirectUriStorage redirectUriStorage;
     private final JwtUtil jwtUtil;
-    private final AuthUtil authUtil;
 
     @PostMapping("/register")
     @Operation(summary = "회원가입")
@@ -50,9 +45,10 @@ public class UserAuthController {
     public void socialRegister(
             @PathVariable String socialType,
             @RequestParam(name = "redirect_uri") String redirect_uri,
+            HttpServletRequest request,
             HttpServletResponse response
     ) throws IOException {
-        redirectUriStorage.setRedirectUri(redirect_uri);
+        redirectUriStorage.save(request, redirect_uri);
         response.sendRedirect("/api/oauth2/authorization/"+socialType);
     }
 
@@ -60,7 +56,6 @@ public class UserAuthController {
     @Operation(summary = "로그아웃")
     public ResponseEntity<Object> logout(HttpServletRequest request) {
         String accessToken = jwtUtil.extractAccessToken(request);
-        log.info("Controller === 헤더의 accesstoken : {}", accessToken);
         userAuthService.logout(accessToken);
         return SuccessResponse.createSuccess(SuccessCode.LOGOUT_SUCCESS);
     }

@@ -46,7 +46,7 @@ const router = createRouter({
             component: SignupView,
         },
         {
-            path: '/login-success/:atk/:rtk',
+            path: '/login-success',
             name: 'loginsuccess',
             component: LoginSuccessView,
         },

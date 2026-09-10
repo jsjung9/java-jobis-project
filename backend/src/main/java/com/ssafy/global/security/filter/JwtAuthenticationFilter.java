@@ -15,11 +15,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 @Component
 @RequiredArgsConstructor
@@ -33,45 +32,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
 
-    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
-
-
-    // 필터 적용하지 않을 경로
-    private final String[] excludePath = {
-            "/api/login/**",
-//            "/api/user/logout",
-            "/api/user/login",
-            "/api/user/login/**",
-            "/api/user/register",
-            "/api/news/**",
-            "/api/patent/**",
-            "/api/swagger-ui/**",
-            "/api/api-docs/**",
-            "/api/v3/api-docs/**",
-            "/api/company/youthcompany/**",
-            "/api/company/statement/**",
-            "/api/company/search**",
-            "/api/company/rate/**",
-            "/api/company/quarter/**",
-            "/api/company/popular",
-            "/api/company/info/**",
-    };
-
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-        return Arrays.stream(excludePath)
-                .anyMatch(pattern -> antPathMatcher.match(pattern, path));
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return !StringUtils.hasText(request.getHeader(AUTHORIZATION_HEADER))
+                && !StringUtils.hasText(request.getHeader("Refresh-Token"));
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        log.info("요청 URI : "+request.getRequestURI());
-
         String refreshToken = jwtUtil.extractRefreshToken(request)
                 .filter(jwtUtil::validateToken)
                 .orElse(null);
-        log.info("리프레시 토큰 여부 : " + refreshToken);
 
         // 리프레시 토큰을 헤더에 담아서 요청했다면 access token 연장 신청을 위함
         // redis의 리프레시 토큰과 일치하는지 판단 후 access token 재발급
@@ -99,17 +70,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
     public void checkRefreshTokenAndReIssueAccessToken(HttpServletRequest request, HttpServletResponse response, String refreshToken, FilterChain filterChain) throws ServletException, IOException {
-        log.info("=== 토큰 재발급 메서드 ===");
         String accessToken = jwtUtil.extractAccessToken(request);
 
         if (jwtUtil.validateToken(accessToken)) {
             String id = jwtUtil.extractId(accessToken);
-            log.info("=== 토큰으로 가져온 유저아이디 : {} ===", id);
             String myRefreshToken = jwtUtil.getRedisRefreshToken(id);
-            log.info(" 아이디로 가져온 리프레시토큰 : {}", myRefreshToken);
 
             if (refreshToken.equals(myRefreshToken)) {
-                log.info("일치하는 리프레시토큰 존재, 엑세스 + 리프레시토큰 재발급");
                 JwtDto reIssueJwt = jwtUtil.generateJwtDto(id);
                 refreshTokenService.addRefreshToken(Integer.valueOf(id), reIssueJwt.getRefreshToken());
 
@@ -123,7 +90,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void checkAccessTokenAndAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        log.info("=== access token 요청 검증 후 contextHolder에 등록 ===");
         String accessToken = jwtUtil.extractAccessToken(request);
         if (accessToken != null && jwtUtil.validateToken(accessToken)) {
             String userId = jwtUtil.extractId(accessToken);

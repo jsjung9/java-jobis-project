@@ -55,16 +55,15 @@ public class CustomUsernamePasswordAuthenticationFilter extends AbstractAuthenti
      */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
-        log.info("== 로그인 필터 ==");
-        log.info("Request method: {}", request.getMethod());
-        log.info("Content-Type: {}", request.getHeader("Content-Type"));
         // 사용자 정보를 기반으로 인증 시도
 
         if(!request.getMethod().equals(HTTP_METHOD_POST)) {
             throw new AuthenticationServiceException("post 요청이 아닙니다");
         }
 
-        if(!request.getHeader("Content-Type").equals(MediaType.APPLICATION_JSON_VALUE)) {
+        String contentType = request.getContentType();
+        if (contentType == null
+                || !MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.parseMediaType(contentType))) {
             throw new AuthenticationServiceException("json 타입 요청이 아닙니다");
         }
 
@@ -76,8 +75,6 @@ public class CustomUsernamePasswordAuthenticationFilter extends AbstractAuthenti
                 registerRequest.getEmail(),
                 registerRequest.getPassword()
         );
-        log.info("authRequest {}", authRequest);
-
         // 인증 성공 시 Authentication 객체 반환
         // authenticationManager는 usersDetailsService를 통해 userDetails 객체를 가져오고
         // 해당 userDetails가 사용 가능한 사용자인지 확인 후 최종 인증 성공, 실패 여부 판단

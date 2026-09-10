@@ -40,6 +40,8 @@ out/
 src/main/resources/application-secret.yml
 src/main/resources/application-oauth.yml
 src/main/resources/secret.properties
+src/main/resources/application-local.yml
+.env
 
 ### querydsl q class ###
 src/main/generated/
