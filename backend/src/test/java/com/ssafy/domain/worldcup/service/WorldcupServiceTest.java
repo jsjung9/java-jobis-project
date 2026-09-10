@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 class WorldcupServiceTest {
 
     @Test
-    void reportsMissingTournamentData() {
+    void rejectsTournamentThatCannotBuildACompleteBracket() {
         WorldcupRepository repository = mock(WorldcupRepository.class);
         when(repository.findRandomWorldcups()).thenReturn(List.of());
 

@@ -23,7 +23,7 @@ public class WorldcupService {
 
     public List<WorldcupResponse> findRandomWorldcups() {
         List<Worldcup> randomWorldcups = worldcupRepository.findRandomWorldcups();
-        if (randomWorldcups.isEmpty()) {
+        if (randomWorldcups.size() != 16) {
             throw new RestApiException(ErrorCode.WORLDCUP_NOT_FOUND);
         }
 

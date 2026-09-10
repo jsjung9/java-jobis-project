@@ -17,8 +17,9 @@
                     v-if="!isTournamentStarted"
                     class="learn-more"
                     style="margin: 0 auto; display: block; background-color: #007bff; color: #fff;"> <!-- 배경색과 글자색 지정 -->
-                    Start!
+                    {{ isLoading ? '불러오는 중...' : '시작하기' }}
                 </button>
+                <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
                 <!-- 현재 경기 표시 -->
                 <transition :name="isNextRound ? 'fade-next-round' : 'fade'" mode="out-in">
                 <div
@@ -32,11 +33,9 @@
                             v-for="(match, index) in matches[currentMatchIndex]"
                             :key="index"
                             class="card"
-                            @mouseover="toggleHover(index, true)"
-                            @mouseleave="toggleHover(index, false)"
                             @click="selectWinner(currentMatchIndex, index)"
                             >
-                            <img :src="`src/assets/img/worldcup/${match.worldcupId}.jpg`" alt="나와라 제발" class="image" />
+                            <img :src="worldcupImage(match)" :alt="match.name" class="image" />
 <div class="text">
                         <!-- <div class="text"> -->
                             <span style="font-size: 20px;">{{ match.name }}</span>
@@ -88,51 +87,57 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
-import { useCounterStore } from '@/stores/counter';
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { worldcup } from '@/apis/api/worldcup';
 import { getRecommendation } from '@/apis/api/recommendation';
 
 const router = useRouter();
-const store = useCounterStore();
 const isNextRound = ref(false);
 const companies = ref([]);
 const matches = ref([]);
 const winners = ref([]);
 const winner = ref('');
 const currentMatchIndex = ref(0);
-let currentRound = ref('16강');
-const selectionConfirmed = ref(false);
-const API_URL = store.API_URL;
-const accessToken = localStorage.getItem('accessToken');
+const currentRound = ref('16강');
+const isLoading = ref(false);
+const errorMessage = ref('');
+const worldcupImages = import.meta.glob('/src/assets/img/worldcup/*.jpg', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+});
+const imagesByName = Object.fromEntries(
+    Object.entries(worldcupImages).map(([path, url]) => [path.split('/').pop(), url]),
+);
 
 // 게임 시작 및 기업 정보 가져오기
 const startTournamentAndgetInfo = function () {
+    if (isLoading.value) return;
     companiesInfo();
-    startTournament();
 };
 
 // 기업 상세 정보 페이지로 이동
-const goCompanyDeatil = (comapnyId) => [
+const goCompanyDeatil = companyId =>
     router.push({
         name: 'companydetail',
-        params: { companyId: comapnyId },
-    }),
-];
+        params: { companyId },
+    });
 
 // 기업 정보 가져오기
 const companiesInfo = function () {
+    isLoading.value = true;
+    errorMessage.value = '';
     worldcup(
         (res) => {
             companies.value = res.data.data;
-            // console.log(companies.value);
             createMatches();
+            isTournamentStarted.value = true;
+            isLoading.value = false;
         },
-        (err) => {
-            console.log(err);
+        () => {
+            errorMessage.value = '기업 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+            isLoading.value = false;
         }
     )
 };
@@ -142,17 +147,15 @@ const winnerInfoLoaded = ref(false);
 const getWinnerInfo = () => {
     winnerInfo();
 };
-const win = ref('');
+const win = ref([]);
 const winnerInfo = function () {
     getRecommendation(winner.value.worldcupId,
         (res) => {
             win.value = res.data.data;
-            winnerInfoLoaded.value = true; // winner 정보가 로드되었음을 표시
-            console.log(win.value);
-            console.log(winnerInfoLoaded.value);          
+            winnerInfoLoaded.value = true;
         },
-        (err) => {
-            console.log(err);
+        () => {
+            errorMessage.value = '추천 기업을 불러오지 못했습니다.';
         }
     );
 };
@@ -161,21 +164,14 @@ const winnerInfo = function () {
 const createMatches = () => {
     const newMatches = [];
     for (let i = 0; i < companies.value.length; i += 2) {
-        newMatches.push([companies.value[i], companies.value[i + 1]]);
-        // console.log(companies.value);
+        const match = [companies.value[i], companies.value[i + 1]].filter(Boolean);
+        if (match.length === 2) newMatches.push(match);
     }
     matches.value = newMatches;
 };
 
 
-// 게임 시작
 const isTournamentStarted = ref(false);
-const startTournament = () => {
-    isTournamentStarted.value = true;
-    if (!matches.value.length || currentRound.value === '16강') {
-        createMatches();
-    }
-};
 
 // 게임 재시작
 const resetTournament = () => {
@@ -185,18 +181,18 @@ const resetTournament = () => {
     winner.value = '';
     currentMatchIndex.value = 0;
     currentRound.value = '16강';
+    winnerInfoLoaded.value = false;
+    win.value = [];
+    errorMessage.value = '';
 };
 
 
 // 다음 경기 시작
-const nextMatch = ref(null);
 const selectWinner = (matchIndex, winnerIndex) => {
   const selectedMatch = matches.value[matchIndex][winnerIndex];
   winners.value.push(selectedMatch);
 
-  selectionConfirmed.value = false;
   setTimeout(() => {
-    selectionConfirmed.value = true;
     currentMatchIndex.value++;
     if (currentMatchIndex.value >= matches.value.length) {
       startNextRound();
@@ -231,7 +227,6 @@ const startNextRound = () => {
             currentRound.value = nextRoundName;
         }
 
-        const isNextRound = ref(null);
         isNextRound.value = true;
         setTimeout(() => (isNextRound.value = false), 500);
     }, 1000);
@@ -259,32 +254,10 @@ const getStyle = (match, factor) => {
   return {}; // 기본 스타일
 };
 
-const matchStyles = computed(() => {
-  return matches.value.map(match => {
-    return {
-      match: match,
-      styles: {
-        activity: getStylesForMatch(match[0]).activity,
-        efficiency: getStylesForMatch(match[0]).efficiency,
-        growth: getStylesForMatch(match[0]).growth,
-        profitability: getStylesForMatch(match[0]).profitability,
-        stability: getStylesForMatch(match[0]).stability,
-      }
-    };
-  });
-});
-
-// 컴포넌트에서 사용할 수 있도록 `styles`를 반응형 참조로 만듭니다.
-const styles = ref({});
-
-const hoverStates = ref([]);
-
-watch(matches, (newMatches) => {
-  hoverStates.value = newMatches.map(() => false);
-}, { immediate: true });
-
-const toggleHover = (index, state) => {
-  hoverStates.value[index] = state;
+const worldcupImage = match => {
+    const configuredName = match.img?.split('/').pop();
+    const fallbackName = `${((Number(match.worldcupId) - 1) % 16) + 1}.jpg`;
+    return imagesByName[configuredName] ?? imagesByName[fallbackName];
 };
 </script>
 
