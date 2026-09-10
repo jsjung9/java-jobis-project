@@ -1,53 +1,60 @@
-from packages.naver_scrapper import perform_news_search
-from packages.openAI import call_openapi
+import logging
+import os
 
-from typing import Optional
-
-from fastapi import FastAPI
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Path
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 
-import logging
-import time
-import re
+from models import NewsResult
+from packages.naver_scraper import NewsSearchError, normalize_company_name, perform_news_search
+from packages.openai_analyzer import AnalysisError, analyze_news
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='news.log', level=logging.INFO)
 
-app = FastAPI()
 
-# CORS 설정
+def allowed_origins() -> list[str]:
+    value = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
+    return [origin.strip() for origin in value.split(",") if origin.strip()]
+
+
+app = FastAPI(
+    title="Jobis News Analysis API",
+    version="1.0.0",
+    description="기업 뉴스를 수집하고 구직 관점의 핵심 키워드를 추출합니다.",
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET"],
+    allow_headers=["Accept", "Authorization", "Content-Type"],
 )
 
-# scrapper 설정
-lastpage = 15
-MAX_ARTICLES = 3
 
-@app.get('/news/{name}')
-def call_perform_news_search(name: Optional[str] = None):
-    logger.info("Started At: " + time.strftime('%c', time.localtime(time.time())))
-    logger.info(f"Company name: {name}")
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
 
-    result = {}
+
+@app.get("/news/{name}", response_model=NewsResult)
+async def company_news(
+    name: str = Path(min_length=1, max_length=80),
+) -> NewsResult:
+    normalized_name = normalize_company_name(name)
+    if not normalized_name:
+        raise HTTPException(status_code=422, detail="유효한 기업명을 입력해 주세요.")
 
     try:
-        result = call_openapi(perform_news_search(normalize_company_name(name), lastpage, MAX_ARTICLES))
-        logger.info("Finished At: " + time.strftime('%c', time.localtime(time.time())))
+        articles = await run_in_threadpool(perform_news_search, normalized_name)
+        analysis = await run_in_threadpool(analyze_news, articles)
+    except (NewsSearchError, AnalysisError):
+        logger.exception("Company news analysis failed")
+        raise HTTPException(
+            status_code=502,
+            detail="외부 뉴스 분석 서비스에서 응답을 가져오지 못했습니다.",
+        ) from None
 
-    except Exception as e:
-        logger.info(f"({time.localtime(time.time())})ERROR: {str(e)}")
-
-    return result
-
-def normalize_company_name(company_name):
-    company_name = re.sub(r'\(.*?\)|주식회사|㈜|\(주\)|\s*Co\.?\s*Ltd\.?', '', company_name, flags=re.IGNORECASE)
-    company_name = company_name.strip().strip('"').strip("'")
-    return company_name
-
-if __name__ == '__main__':
-    call_perform_news_search()
+    return NewsResult(news=articles, keywords=analysis.keywords)
