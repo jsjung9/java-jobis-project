@@ -7,12 +7,10 @@ import com.ssafy.global.oauth2.userinfo.NaverOAuth2UserInfo;
 import com.ssafy.global.oauth2.userinfo.OAuth2UserInfo;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
 @Getter
-@Slf4j
 public class OAuthAttributes {
 
     // 이후에 CustomOAuth2UserService에서 값을 얻어 빌더로 생성 후 반환
@@ -33,7 +31,6 @@ public class OAuthAttributes {
      */
     public static OAuthAttributes of(SocialType socialType,
                                      String userNameAttributeName, Map<String, Object> attributes) {
-        log.info("소셜로그인 attribute");
 
         if (socialType == SocialType.NAVER) {
             return ofNaver(userNameAttributeName, attributes);

@@ -2,7 +2,6 @@ package com.ssafy.global.oauth2.service;
 
 import com.ssafy.domain.users.entity.SocialType;
 import com.ssafy.domain.users.entity.Users;
-import com.ssafy.domain.users.exception.DuplicatedEmailException;
 import com.ssafy.domain.users.service.UserAuthService;
 import com.ssafy.domain.users.service.UserService;
 import com.ssafy.global.oauth2.userinfo.OAuth2UserInfo;
@@ -10,7 +9,6 @@ import com.ssafy.global.oauth2.util.CustomOAuth2User;
 import com.ssafy.global.oauth2.util.OAuthAttributes;
 import com.ssafy.global.response.exception.RestApiException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -23,7 +21,6 @@ import java.util.Map;
 import java.util.Collections;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
@@ -35,7 +32,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException, RestApiException {
-        log.info("CustomOAuth2UserService.loadUser() 실행 - OAuth2 로그인 요청 진입");
 
         /**
          * DefaultOAuth2UserService 객체를 생성하여, loadUser(userRequest)를 통해 DefaultOAuth2User 객체를 생성 후 반환
@@ -56,7 +52,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String userNameAttributeName = userRequest.getClientRegistration()
                 .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName(); // OAuth2 로그인 시 키(PK)가 되는 값
         Map<String, Object> attributes = oAuth2User.getAttributes(); // 소셜 로그인에서 API가 제공하는 userInfo의 Json 값(유저 정보들)
-        log.info("OAuth2 user received: provider={}", socialType);
 
         // socialType에 따라 유저 정보를 통해 OAuthAttributes 객체 생성
         OAuthAttributes extractAttributes = OAuthAttributes.of(socialType, userNameAttributeName, attributes);
@@ -89,8 +84,16 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     private Users getUser(OAuthAttributes attributes, SocialType socialType) {
         OAuth2UserInfo oauth2UserInfo = attributes.getOauth2UserInfo();
         String userEmail = oauth2UserInfo.getEmail();
+        String socialId = oauth2UserInfo.getId();
 
-        Users existingSocialUser = userAuthService.findSocialUser(socialType, oauth2UserInfo.getId());
+        if (userEmail == null || userEmail.isBlank() || socialId == null || socialId.isBlank()) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error("invalid_provider_response"),
+                    "소셜 로그인 제공자에게서 필수 계정 정보를 받지 못했습니다."
+            );
+        }
+
+        Users existingSocialUser = userAuthService.findSocialUser(socialType, socialId);
         if (existingSocialUser != null) {
             return existingSocialUser;
         }

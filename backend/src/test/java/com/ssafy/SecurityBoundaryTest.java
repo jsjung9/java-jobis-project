@@ -1,6 +1,8 @@
 package com.ssafy;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,8 @@ class SecurityBoundaryTest {
     @Test
     void rejectsAnonymousAccessToPersonalScraps() throws Exception {
         mockMvc.perform(get("/user/scrap"))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isUnauthorized())
+            .andExpect(content().contentTypeCompatibleWith("application/json"))
+            .andExpect(jsonPath("$.code").value("UNAUTHORIZED_REQUEST"));
     }
 }

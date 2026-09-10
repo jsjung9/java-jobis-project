@@ -31,7 +31,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(RestApiException.class)
     public ResponseEntity<Object> handleRestApiException(final RestApiException e) {
-        logger.error("RestApiException caught: ", e);
+        logger.debug("Handled API exception: {}", e.getResponseCode());
 
         final ResponseCode responseCode = e.getResponseCode();
         return handleExceptionInternal(responseCode);
@@ -42,7 +42,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgument(final IllegalArgumentException e) {
-        logger.error("IllegalArgumentException caught: ", e);
+        logger.debug("Invalid request: {}", e.getMessage());
 
         final ResponseCode responseCode = ErrorCode.INVALID_PARAMETER;
         return handleExceptionInternal(responseCode, responseCode.getMessage());
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpHeaders headers,
             HttpStatusCode status,
             WebRequest request) {
-        logger.error("MethodArgumentNotValidException caught: ", ex);
+        logger.debug("Request body validation failed");
 
         final ResponseCode responseCode = ErrorCode.INVALID_PARAMETER;
         return handleExceptionInternal(ex, responseCode);
@@ -68,7 +68,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Object> handleConstraintViolationException(final ConstraintViolationException e) {
-        logger.error("ConstraintViolationException caught: ", e);
+        logger.debug("Request parameter validation failed");
 
         final ResponseCode responseCode = ErrorCode.INVALID_PARAMETER;
         return handleExceptionInternal(e, responseCode);
@@ -79,7 +79,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Object> handleMethodArgumentTypeMismatchException(final MethodArgumentTypeMismatchException e) {
-        logger.error("MethodArgumentTypeMismatchException caught: ", e);
+        logger.debug("Request parameter type mismatch: {}", e.getName());
 
         final ResponseCode responseCode = ErrorCode.INVALID_PARAMETER;
         return handleExceptionInternal(responseCode, responseCode.getMessage());

@@ -2,6 +2,8 @@ package com.ssafy.global.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.domain.users.repository.UserRepository;
+import com.ssafy.global.response.code.ErrorCode;
+import com.ssafy.global.response.structure.ErrorResponse;
 import com.ssafy.domain.users.service.RefreshTokenService;
 import com.ssafy.global.oauth2.handler.OAuth2LoginFailureHandler;
 import com.ssafy.global.oauth2.handler.OAuth2LoginSuccessHandler;
@@ -24,6 +26,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
@@ -52,9 +55,9 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                                writeSecurityError(response, ErrorCode.UNAUTHORIZED_REQUEST))
                         .accessDeniedHandler((request, response, exception) ->
-                                response.sendError(HttpServletResponse.SC_FORBIDDEN)))
+                                writeSecurityError(response, ErrorCode.FORBIDDEN_ACCESS)))
                 .authorizeHttpRequests((authorize) ->
                                 authorize
                                         .requestMatchers(
@@ -116,4 +119,11 @@ public class SecurityConfig {
         return new JwtAuthenticationFilter(jwtUtil, userRepository);
     }
 
+    private void writeSecurityError(HttpServletResponse response, ErrorCode errorCode)
+            throws java.io.IOException {
+        response.setStatus(errorCode.getHttpStatus().value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(java.nio.charset.StandardCharsets.UTF_8.name());
+        objectMapper.writeValue(response.getOutputStream(), ErrorResponse.of(errorCode));
+    }
 }

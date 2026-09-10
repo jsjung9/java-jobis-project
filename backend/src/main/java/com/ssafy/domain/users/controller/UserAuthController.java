@@ -15,7 +15,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +24,6 @@ import java.util.Set;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
-@Slf4j
 @Tag(name = "회원가입, 로그인 관리")
 public class UserAuthController {
 
@@ -41,7 +39,6 @@ public class UserAuthController {
     @Operation(summary = "회원가입")
     public ResponseEntity<Object> register(
             @Valid @RequestBody RegisterRequest request) {
-        log.info("register 메서드 호출");
         userService.register(request);
         return SuccessResponse.createSuccess(SuccessCode.JOIN_SUCCESS);
     }
