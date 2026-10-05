@@ -1,6 +1,6 @@
 beautifulsoup4==4.15.0
 fastapi==0.141.1
 openai==3.11.0
-python-dotenv==1.2.3
+python-dotenv==1.2.4
 requests==2.34.2
 uvicorn[standard]==0.52.4
