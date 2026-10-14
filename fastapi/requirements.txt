@@ -1,5 +1,5 @@
 beautifulsoup4==4.15.0
-fastapi==0.141.1
+fastapi==0.143.0
 openai==3.11.0
 python-dotenv==1.2.3
 requests==2.34.2
